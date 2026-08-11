@@ -1,3 +1,5 @@
+import Reveal from "./Reveal";
+
 const WORDS = [
   "BREAKTHROUGH",
   "PROGRESS",
@@ -35,34 +37,30 @@ const VALUES = [
   },
 ];
 
+/* Each track holds the word list twice so the -50% marquee loops seamlessly;
+   two tracks side by side keep the strip filled at any viewport width. */
 function Ticker({ color, className = "" }) {
   return (
-    <div className={`flex whitespace-nowrap overflow-hidden ${className}`}>
-      <div className="flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] animate-marquee shrink-0">
-        {[...WORDS, ...WORDS].map((word, i) => (
-          <p
-            key={i}
-            className="font-bold text-[clamp(28px,4.4vw,64px)] shrink-0"
-            style={{ color }}
-          >
-            {word}
-          </p>
-        ))}
-      </div>
-      <div
-        className="flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] animate-marquee shrink-0"
-        aria-hidden
-      >
-        {[...WORDS, ...WORDS].map((word, i) => (
-          <p
-            key={i}
-            className="font-bold text-[clamp(28px,4.4vw,64px)] shrink-0"
-            style={{ color }}
-          >
-            {word}
-          </p>
-        ))}
-      </div>
+    <div
+      aria-hidden
+      className={`flex whitespace-nowrap overflow-hidden ${className}`}
+    >
+      {[0, 1].map((track) => (
+        <div
+          key={track}
+          className="flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] animate-marquee shrink-0"
+        >
+          {[...WORDS, ...WORDS].map((word, i) => (
+            <p
+              key={i}
+              className="font-bold text-[clamp(28px,4.4vw,64px)] shrink-0"
+              style={{ color }}
+            >
+              {word}
+            </p>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
@@ -74,7 +72,7 @@ export default function Values() {
       className="relative bg-white w-full overflow-hidden scroll-mt-16"
     >
       <div className="max-w-[1440px] mx-auto py-16 sm:py-20 lg:pb-[120px]">
-        <div className="relative h-[clamp(48px,8.7vw,125px)]">
+        <div className="marquee relative h-[clamp(48px,8.7vw,125px)]">
           <Ticker color="#292b2f" className="absolute top-0 left-0 w-full" />
           <Ticker
             color="#e9e9e9"
@@ -88,20 +86,37 @@ export default function Values() {
               key={v.num}
               className="w-full max-w-[1280px] flex flex-col lg:flex-row items-start justify-between gap-6 lg:gap-8"
             >
-              <p className="font-bold text-[#4a80f8] text-[18px] sm:text-[20px] shrink-0">
+              <Reveal
+                as="p"
+                variant="reveal-left"
+                className="font-bold text-[#4a80f8] text-[18px] sm:text-[20px] shrink-0"
+              >
                 {v.tag}
-              </p>
+              </Reveal>
               <div className="flex gap-5 sm:gap-8 lg:gap-12 items-start w-full lg:w-auto">
-                <p className="font-bold text-[#e9e9e9] text-[26px] sm:text-[32px] shrink-0">
+                <Reveal
+                  as="p"
+                  variant="reveal-scale"
+                  delay={120}
+                  className="font-bold text-[#e9e9e9] text-[26px] sm:text-[32px] shrink-0"
+                >
                   {v.num}
-                </p>
+                </Reveal>
                 <div className="flex flex-col gap-5 sm:gap-8 lg:gap-12 min-w-0">
-                  <p className="font-bold text-[#292b2f] text-[20px] sm:text-[26px] lg:text-[32px] max-w-[688px] leading-normal">
+                  <Reveal
+                    as="p"
+                    delay={200}
+                    className="font-bold text-[#292b2f] text-[20px] sm:text-[26px] lg:text-[32px] max-w-[688px] leading-normal"
+                  >
                     {v.title}
-                  </p>
-                  <p className="font-semibold text-[#555962] text-[16px] leading-[24px]">
+                  </Reveal>
+                  <Reveal
+                    as="p"
+                    delay={320}
+                    className="font-semibold text-[#555962] text-[16px] leading-[24px]"
+                  >
                     {v.sub}
-                  </p>
+                  </Reveal>
                 </div>
               </div>
             </div>

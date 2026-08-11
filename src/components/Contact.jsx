@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Reveal from "./Reveal";
 
 const FIELDS = [
   { key: "name", type: "text", title: "TITLE", sub: "SUBEXPLAIN" },
@@ -31,18 +32,25 @@ export default function Contact() {
   return (
     <section id="contact" className="relative bg-white w-full scroll-mt-16">
       <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-[160px] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-8 items-center">
-        <h2 className="font-bold text-[#292b2f] text-[clamp(28px,4.4vw,64px)]">
+        <Reveal
+          as="h2"
+          className="font-bold text-[#292b2f] text-[clamp(28px,4.4vw,64px)]"
+        >
           Contact <span className="text-[#4a80f8]">Us</span>
-        </h2>
+        </Reveal>
 
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-[660px] lg:ml-auto flex flex-col gap-8 lg:gap-12"
         >
-          {FIELDS.map((field) => {
+          {FIELDS.map((field, i) => {
             const id = `contact-${field.key}`;
             return (
-              <div key={field.key} className="flex flex-col gap-2 w-full">
+              <Reveal
+                key={field.key}
+                delay={i * 120}
+                className="flex flex-col gap-2 w-full"
+              >
                 <label
                   htmlFor={id}
                   className="font-bold text-[#292b2f] text-[20px]"
@@ -75,11 +83,11 @@ export default function Contact() {
                     className={inputClass}
                   />
                 )}
-              </div>
+              </Reveal>
             );
           })}
 
-          <div className="flex items-center gap-4">
+          <Reveal delay={360} className="flex items-center gap-4">
             <button
               type="submit"
               className="bg-[#292b2f] text-white font-bold text-[16px] px-8 py-4 transition-colors duration-300 hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
@@ -95,7 +103,7 @@ export default function Contact() {
             >
               문의가 접수되었습니다.
             </p>
-          </div>
+          </Reveal>
         </form>
       </div>
     </section>

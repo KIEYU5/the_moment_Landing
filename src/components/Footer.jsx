@@ -1,3 +1,5 @@
+import Reveal from "./Reveal";
+
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "#" },
   { label: "Instagram", href: "#" },
@@ -12,7 +14,7 @@ export default function Footer() {
   return (
     <footer className="relative bg-[#fbfbfb] w-full">
       <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10">
-        <div>
+        <Reveal>
           <p className="font-bold text-[#292b2f] text-[26px] sm:text-[32px] lg:text-[36px]">
             THE MOMENT
           </p>
@@ -22,9 +24,9 @@ export default function Footer() {
           <p className="font-normal text-[#555962] text-[14px] mt-12 lg:mt-[152px]">
             © 2026 the_moment. All rights reserved.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="flex gap-16 sm:gap-20">
+        <Reveal delay={140} className="flex gap-16 sm:gap-20">
           <div className="flex flex-col gap-6 sm:gap-20">
             <p className="font-normal text-[#555962] text-[14px]">SOCIAL</p>
             <div className="flex flex-col gap-4 sm:gap-6">
@@ -52,7 +54,7 @@ export default function Footer() {
               ))}
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </footer>
   );

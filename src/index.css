@@ -14,6 +14,8 @@ body {
   background: #ffffff;
 }
 
+/* ---------- marquee ---------- */
+
 @keyframes marquee-left {
   from {
     transform: translateX(0);
@@ -25,4 +27,73 @@ body {
 
 .animate-marquee {
   animation: marquee-left 40s linear infinite;
+}
+
+.marquee:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* ---------- scroll reveal ----------
+   Variants share one transition; the hidden state only exists when the
+   visitor has not asked for reduced motion, so content is never trapped
+   invisible. Never combine these with Tailwind's transition-* utilities
+   on the same element — put those on a child instead. */
+
+.reveal-up,
+.reveal-left,
+.reveal-scale,
+.reveal-brush,
+.wordmark-letter {
+  transition-property: opacity, transform, clip-path;
+  transition-duration: 700ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-up:not(.is-in) {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .reveal-left:not(.is-in) {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+
+  .reveal-scale:not(.is-in) {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  /* Both ends must be inset() — clip-path does not interpolate to `none`,
+     it would snap instead of wiping. */
+  .reveal-brush {
+    transition-duration: 1200ms;
+    clip-path: inset(0 0 0 0);
+  }
+
+  .reveal-brush:not(.is-in) {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .wordmark-letter {
+    transition-duration: 900ms;
+    transform-box: fill-box;
+    transform-origin: center bottom;
+  }
+
+  .wordmark-letter:not(.is-in) {
+    opacity: 0;
+    transform: translateY(45%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    scroll-behavior: auto;
+  }
+
+  .animate-marquee {
+    animation: none;
+  }
 }

@@ -28,9 +28,12 @@ npm run dev
 ```
 src/
   App.jsx              섹션 조립
-  index.css            Tailwind 진입점 + 전역 애니메이션 키프레임
+  index.css            Tailwind 진입점 + 마퀴/리빌 애니메이션 정의
+  hooks/useInView.js   스크롤 진입 감지 (IntersectionObserver, 1회성)
   assets/              워드마크 · Union 로고 SVG
   components/
+    Reveal.jsx         진입 시 나타나는 래퍼
+    Wordmark.jsx       THE MOMENT 워드마크 (글자별 애니메이션용 인라인 SVG)
     Hero.jsx           #(top)    내비 + THE MOMENT 워드마크
     Intro.jsx          #about    회사 소개 · 철학
     Values.jsx         #service  마퀴 티커 + 핵심 가치 3
@@ -50,6 +53,36 @@ src/
 | 연회색 (배경 텍스트) | `#e9e9e9` |
 | 카드 배경 | `#d9d9d9` |
 | 푸터 배경 | `#fbfbfb` |
+
+## 애니메이션
+
+`Reveal`을 감싸면 화면에 들어올 때 한 번 나타납니다. `variant`로 방향을 고르고
+`delay`(ms)로 순서를 만듭니다.
+
+```jsx
+<Reveal as="h2" delay={120} className="...">제목</Reveal>
+<Reveal variant="reveal-left">…</Reveal>
+```
+
+| variant | 움직임 |
+| --- | --- |
+| `reveal-up` (기본) | 아래에서 위로 + 페이드 |
+| `reveal-left` | 왼쪽에서 슬라이드 |
+| `reveal-scale` | 살짝 확대되며 페이드 |
+| `reveal-brush` | 왼쪽 → 오른쪽 `clip-path` 와이프 (Hero의 파란 M) |
+
+Hero는 진입 시 내비 → `THE` → 붓터치 `M` → `OMENT` 순으로 이어집니다. 타이밍
+상수는 [`Hero.jsx`](src/components/Hero.jsx) 상단에 모아 두었습니다.
+
+주의할 점 두 가지:
+
+- `Reveal` 요소에 Tailwind `transition-*` 유틸리티를 같이 쓰면 리빌 트랜지션을
+  덮어씁니다. hover 효과 등은 자식 요소에 두세요.
+- `clip-path`는 `none`과 보간되지 않습니다. `reveal-brush`의 양끝이 모두
+  `inset()`인 이유입니다.
+
+`prefers-reduced-motion: reduce`에서는 리빌의 숨김 상태 자체가 적용되지 않고
+마퀴와 부드러운 스크롤도 멈춥니다.
 
 ## 남은 작업
 
