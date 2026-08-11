@@ -1,23 +1,35 @@
 import { useState } from "react";
 
 const FIELDS = [
-  { key: "name", title: "TITLE", sub: "SUBEXPLAIN" },
-  { key: "email", title: "TITLE", sub: "SUBEXPLAIN" },
-  { key: "message", title: "TITLE", sub: "SUBEXPLAIN" },
+  { key: "name", type: "text", title: "TITLE", sub: "SUBEXPLAIN" },
+  { key: "email", type: "email", title: "TITLE", sub: "SUBEXPLAIN" },
+  { key: "message", type: "textarea", title: "TITLE", sub: "SUBEXPLAIN" },
 ];
 
-export default function Contact() {
-  const [values, setValues] = useState({ name: "", email: "", message: "" });
+const EMPTY = { name: "", email: "", message: "" };
 
-  const handleChange = (key) => (e) =>
+export default function Contact() {
+  const [values, setValues] = useState(EMPTY);
+  const [status, setStatus] = useState("idle");
+
+  const handleChange = (key) => (e) => {
     setValues((prev) => ({ ...prev, [key]: e.target.value }));
+    if (status !== "idle") setStatus("idle");
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setStatus("sent");
+    setValues(EMPTY);
   };
 
+  const inputClass =
+    "bg-[#f5f5f5] w-full px-4 py-3 font-bold text-[#292b2f] text-[14px] outline-none " +
+    "border border-transparent transition-colors duration-300 " +
+    "focus:border-[#4a80f8] focus:bg-white placeholder:text-[#292b2f] placeholder:opacity-40";
+
   return (
-    <section className="relative bg-white w-full">
+    <section id="contact" className="relative bg-white w-full scroll-mt-16">
       <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-[160px] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-8 items-center">
         <h2 className="font-bold text-[#292b2f] text-[clamp(28px,4.4vw,64px)]">
           Contact <span className="text-[#4a80f8]">Us</span>
@@ -27,19 +39,63 @@ export default function Contact() {
           onSubmit={handleSubmit}
           className="w-full max-w-[660px] lg:ml-auto flex flex-col gap-8 lg:gap-12"
         >
-          {FIELDS.map((field) => (
-            <div key={field.key} className="flex flex-col gap-2 w-full">
-              <p className="font-bold text-[#292b2f] text-[20px]">{field.title}</p>
-              <p className="font-normal text-[#555962] text-[14px]">{field.sub}</p>
-              <input
-                type="text"
-                value={values[field.key]}
-                onChange={handleChange(field.key)}
-                placeholder="Form"
-                className="bg-[#f5f5f5] w-full px-4 py-3 font-bold text-[#292b2f] text-[14px] outline-none placeholder:text-[#292b2f] placeholder:opacity-100"
-              />
-            </div>
-          ))}
+          {FIELDS.map((field) => {
+            const id = `contact-${field.key}`;
+            return (
+              <div key={field.key} className="flex flex-col gap-2 w-full">
+                <label
+                  htmlFor={id}
+                  className="font-bold text-[#292b2f] text-[20px]"
+                >
+                  {field.title}
+                </label>
+                <p className="font-normal text-[#555962] text-[14px]">
+                  {field.sub}
+                </p>
+                {field.type === "textarea" ? (
+                  <textarea
+                    id={id}
+                    name={field.key}
+                    rows={5}
+                    required
+                    value={values[field.key]}
+                    onChange={handleChange(field.key)}
+                    placeholder="Form"
+                    className={`${inputClass} resize-y`}
+                  />
+                ) : (
+                  <input
+                    id={id}
+                    name={field.key}
+                    type={field.type}
+                    required
+                    value={values[field.key]}
+                    onChange={handleChange(field.key)}
+                    placeholder="Form"
+                    className={inputClass}
+                  />
+                )}
+              </div>
+            );
+          })}
+
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              className="bg-[#292b2f] text-white font-bold text-[16px] px-8 py-4 transition-colors duration-300 hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
+            >
+              Send
+            </button>
+            <p
+              role="status"
+              aria-live="polite"
+              className={`font-semibold text-[14px] text-[#4a80f8] transition-opacity duration-300 ${
+                status === "sent" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              문의가 접수되었습니다.
+            </p>
+          </div>
         </form>
       </div>
     </section>
