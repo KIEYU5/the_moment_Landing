@@ -38,67 +38,72 @@ export default function Brush({ delay = 0, className = "" }) {
   const maskId = `brush-mask-${uid}`;
   const blurId = `brush-blur-${uid}`;
 
+  /* The caller sizes and positions the wrapper; the svg only ever fills it.
+     Keep those on separate elements -- put w-full next to an arbitrary width
+     utility and Tailwind resolves the clash by stylesheet order, not by the
+     order written here, so the svg can silently blow up to the full hero. */
   return (
-    <svg
-      ref={ref}
-      aria-hidden
-      viewBox="0 0 217.825 209.331"
-      preserveAspectRatio="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`block w-full h-full ${className}`}
-    >
-      <defs>
-        <filter
-          id={blurId}
-          x="-20%"
-          y="-20%"
-          width="140%"
-          height="140%"
-          colorInterpolationFilters="sRGB"
-        >
-          <feGaussianBlur stdDeviation="2.5" />
-        </filter>
-
-        <mask
-          id={maskId}
-          maskUnits="userSpaceOnUse"
-          x="-60"
-          y="-60"
-          width="340"
-          height="330"
-        >
-          <g filter={`url(#${blurId})`}>
-            {STROKES.map((stroke, i) => (
-              <path
-                key={i}
-                d={stroke.d}
-                pathLength="1"
-                fill="none"
-                stroke="#fff"
-                strokeDasharray="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`brush-stroke${inView ? " is-in" : ""}`}
-                style={{
-                  strokeWidth: stroke.width,
-                  transitionDelay: `${delay + stroke.delay}ms`,
-                  transitionDuration: `${stroke.duration}ms`,
-                }}
-              />
-            ))}
-          </g>
-        </mask>
-      </defs>
-
-      <image
-        href={unionLogo}
-        x="0"
-        y="0"
-        width="217.825"
-        height="209.331"
+    <div ref={ref} className={className}>
+      <svg
+        aria-hidden
+        viewBox="0 0 217.825 209.331"
         preserveAspectRatio="none"
-        mask={`url(#${maskId})`}
-      />
-    </svg>
+        xmlns="http://www.w3.org/2000/svg"
+        className="block w-full h-full"
+      >
+        <defs>
+          <filter
+            id={blurId}
+            x="-20%"
+            y="-20%"
+            width="140%"
+            height="140%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feGaussianBlur stdDeviation="2.5" />
+          </filter>
+
+          <mask
+            id={maskId}
+            maskUnits="userSpaceOnUse"
+            x="-60"
+            y="-60"
+            width="340"
+            height="330"
+          >
+            <g filter={`url(#${blurId})`}>
+              {STROKES.map((stroke, i) => (
+                <path
+                  key={i}
+                  d={stroke.d}
+                  pathLength="1"
+                  fill="none"
+                  stroke="#fff"
+                  strokeDasharray="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`brush-stroke${inView ? " is-in" : ""}`}
+                  style={{
+                    strokeWidth: stroke.width,
+                    transitionDelay: `${delay + stroke.delay}ms`,
+                    transitionDuration: `${stroke.duration}ms`,
+                  }}
+                />
+              ))}
+            </g>
+          </mask>
+        </defs>
+
+        <image
+          href={unionLogo}
+          x="0"
+          y="0"
+          width="217.825"
+          height="209.331"
+          preserveAspectRatio="none"
+          mask={`url(#${maskId})`}
+        />
+      </svg>
+    </div>
   );
 }
