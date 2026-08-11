@@ -1,0 +1,110 @@
+const WORDS = [
+  "BREAKTHROUGH",
+  "PROGRESS",
+  "ADVANCEMENT",
+  "EVOLUTION",
+  "TRANSFORMATION",
+  "REINVENTION",
+  "CREATIVITY",
+  "INGENUITY",
+  "INVENTION",
+  "DISRUPTION",
+];
+
+const VALUES = [
+  {
+    num: "1.",
+    tag: "Professional",
+    title:
+      "We are the experts who lead our field — driven by relentless learning, sharpening our craft, and raising the standard of what's possible.",
+    sub: "끊임없이 배우고 역량을 키우며, 각자의 분야에서 최고가 되는 사람들.",
+  },
+  {
+    num: "2.",
+    tag: "Communication",
+    title:
+      "We are collaborators who move as one — grounded in openness and trust, we respect one another and grow together.",
+    sub: "열린 태도와 신뢰를 바탕으로, 서로를 존중하며 함께 나아가는 사람들.",
+  },
+  {
+    num: "3.",
+    tag: "Passion",
+    title:
+      "We are challengers who thrive on ambition — with creative thinking, we embrace change and never fear failure.",
+    sub: "창의적인 사고로 변화에 앞장서고, 실패를 두려워하지 않는 열정적인 사람들.",
+  },
+];
+
+function Ticker({ color, className = "" }) {
+  return (
+    <div className={`flex whitespace-nowrap overflow-hidden ${className}`}>
+      <div className="flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] animate-marquee shrink-0">
+        {[...WORDS, ...WORDS].map((word, i) => (
+          <p
+            key={i}
+            className="font-bold text-[clamp(28px,4.4vw,64px)] shrink-0"
+            style={{ color }}
+          >
+            {word}
+          </p>
+        ))}
+      </div>
+      <div
+        className="flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] animate-marquee shrink-0"
+        aria-hidden
+      >
+        {[...WORDS, ...WORDS].map((word, i) => (
+          <p
+            key={i}
+            className="font-bold text-[clamp(28px,4.4vw,64px)] shrink-0"
+            style={{ color }}
+          >
+            {word}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function Values() {
+  return (
+    <section className="relative bg-white w-full overflow-hidden">
+      <div className="max-w-[1440px] mx-auto py-16 sm:py-20 lg:pb-[120px]">
+        <div className="relative h-[clamp(48px,8.7vw,125px)]">
+          <Ticker color="#292b2f" className="absolute top-0 left-0 w-full" />
+          <Ticker
+            color="#e9e9e9"
+            className="absolute top-[36%] left-0 w-full"
+          />
+        </div>
+
+        <div className="mt-16 sm:mt-20 lg:mt-[100px] px-5 sm:px-8 md:px-12 lg:px-20 flex flex-col items-stretch lg:items-end gap-14 sm:gap-16 lg:gap-[160px]">
+          {VALUES.map((v) => (
+            <div
+              key={v.num}
+              className="w-full max-w-[1280px] flex flex-col lg:flex-row items-start justify-between gap-6 lg:gap-8"
+            >
+              <p className="font-bold text-[#4a80f8] text-[18px] sm:text-[20px] shrink-0">
+                {v.tag}
+              </p>
+              <div className="flex gap-5 sm:gap-8 lg:gap-12 items-start w-full lg:w-auto">
+                <p className="font-bold text-[#e9e9e9] text-[26px] sm:text-[32px] shrink-0">
+                  {v.num}
+                </p>
+                <div className="flex flex-col gap-5 sm:gap-8 lg:gap-12 min-w-0">
+                  <p className="font-bold text-[#292b2f] text-[20px] sm:text-[26px] lg:text-[32px] max-w-[688px] leading-normal">
+                    {v.title}
+                  </p>
+                  <p className="font-semibold text-[#555962] text-[16px] leading-[24px]">
+                    {v.sub}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

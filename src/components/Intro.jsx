@@ -1,0 +1,42 @@
+const PHILOSOPHY = [
+  ["우리는 현장에서 답을 찾습니다."],
+  ["가장 필요한 곳에, 가장 먼저 도착하는 기술을 만듭니다."],
+  ["변화는 빠르고, 우리는 조금 더 빠릅니다.", "새로운 흐름을 관찰하고, 실험하고, 서비스로 증명합니다."],
+  ["작은 불편도 그냥 지나치지 않습니다.", "불편을 마주하는 매 순간을 다시 설계합니다."],
+  ["기술은 목적이 아니라 도구입니다.", "우리는 그 도구로 더 나은 경험을 만듭니다."],
+  ["멈추지 않고 묻습니다. 지금보다 더 나은 방법은 무엇인가."],
+  ["그 질문이 우리를 계속 나아가게 합니다."],
+];
+
+export default function Intro() {
+  return (
+    <section className="relative bg-white w-full">
+      <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-24">
+        <h2 className="font-bold text-[#e9e9e9] text-[clamp(28px,4.4vw,64px)] leading-[1.1]">
+          For The Moment & For Every Day
+        </h2>
+
+        <div className="mt-10 sm:mt-14 lg:mt-[76px] flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-10">
+          <p className="font-bold text-[#292b2f] text-[clamp(20px,2.2vw,32px)] leading-normal">
+            순간을 혁신하는 Dvelopment Partner
+            <br />
+            <span className="text-[#4a80f8] text-[clamp(32px,4.4vw,64px)]">더모먼트</span>
+          </p>
+
+          <div className="font-semibold text-[#555962] text-[15px] sm:text-[16px] leading-[24px] max-w-[420px]">
+            {PHILOSOPHY.map((block, i) => (
+              <p key={i} className="mb-6 last:mb-0">
+                {block.map((line, j) => (
+                  <span key={j}>
+                    {line}
+                    {j < block.length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
