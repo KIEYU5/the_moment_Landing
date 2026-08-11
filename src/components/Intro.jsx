@@ -10,7 +10,7 @@ const PHILOSOPHY = [
 
 export default function Intro() {
   return (
-    <section className="relative bg-white w-full">
+    <section id="about" className="relative bg-white w-full scroll-mt-16">
       <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-24">
         <h2 className="font-bold text-[#e9e9e9] text-[clamp(28px,4.4vw,64px)] leading-[1.1]">
           For The Moment & For Every Day
@@ -18,7 +18,7 @@ export default function Intro() {
 
         <div className="mt-10 sm:mt-14 lg:mt-[76px] flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-10">
           <p className="font-bold text-[#292b2f] text-[clamp(20px,2.2vw,32px)] leading-normal">
-            순간을 혁신하는 Dvelopment Partner
+            순간을 혁신하는 Development Partner
             <br />
             <span className="text-[#4a80f8] text-[clamp(32px,4.4vw,64px)]">더모먼트</span>
           </p>

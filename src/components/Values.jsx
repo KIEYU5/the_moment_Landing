@@ -69,7 +69,10 @@ function Ticker({ color, className = "" }) {
 
 export default function Values() {
   return (
-    <section className="relative bg-white w-full overflow-hidden">
+    <section
+      id="service"
+      className="relative bg-white w-full overflow-hidden scroll-mt-16"
+    >
       <div className="max-w-[1440px] mx-auto py-16 sm:py-20 lg:pb-[120px]">
         <div className="relative h-[clamp(48px,8.7vw,125px)]">
           <Ticker color="#292b2f" className="absolute top-0 left-0 w-full" />

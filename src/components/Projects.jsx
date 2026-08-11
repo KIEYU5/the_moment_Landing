@@ -6,7 +6,7 @@ const SUB_PROJECTS = [
 
 export default function Projects() {
   return (
-    <section className="relative bg-white w-full">
+    <section id="work" className="relative bg-white w-full scroll-mt-16">
       <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-[160px]">
         <h2 className="font-bold text-[#292b2f] text-[clamp(28px,4.4vw,64px)] mb-10 sm:mb-16 lg:mb-[140px]">
           Our <span className="text-[#4a80f8]">Project</span>
