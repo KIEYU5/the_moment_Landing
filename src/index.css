@@ -41,8 +41,7 @@ body {
 
 .reveal-up,
 .reveal-left,
-.reveal-scale,
-.wordmark-letter {
+.reveal-scale {
   transition-property: opacity, transform, clip-path;
   transition-duration: 700ms;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
@@ -64,15 +63,26 @@ body {
     transform: scale(0.94);
   }
 
-  .wordmark-letter {
-    transition-duration: 900ms;
-    transform-box: fill-box;
-    transform-origin: center bottom;
-  }
+}
 
-  .wordmark-letter:not(.is-in) {
+/* ---------- wordmark facets ----------
+   Every triangle carries its own copy of the wordmark, offset and turned by
+   the custom properties the component sets, so the letterforms break apart
+   along the facet seams. Releasing the transforms slides all the reflections
+   back into one register. transform-origin is set per facet to its centroid,
+   so each one turns about itself rather than about the viewBox. */
+
+.facet {
+  transition-property: transform, opacity;
+  transition-duration: 820ms;
+  transition-timing-function: cubic-bezier(0.18, 1.06, 0.28, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .facet:not(.is-in) {
     opacity: 0;
-    transform: translateY(45%);
+    transform: translate(var(--fx), var(--fy)) rotate(var(--fr))
+      scale(var(--fs));
   }
 }
 

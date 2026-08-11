@@ -9,11 +9,12 @@ const NAV_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-/* Intro timeline: nav drops in, "THE" rises, the blue M is painted stroke by
-   stroke, and "OMENT" lands as the last brush stroke sweeps down. */
+/* Intro timeline, in ms. The blue M is painted stroke by stroke — the stone
+   is cut — and the wordmark then resolves out of its own facets, starting at
+   the M and working outward. Wordmark spreads its facet delays internally. */
 const NAV_STEP = 60;
-const BRUSH_DELAY = 520;
-const LETTER_DELAYS = [260, 320, 380, 1240, 1300, 1360, 1420, 1480];
+const BRUSH_DELAY = 300;
+const WORDMARK_DELAY = 1150;
 
 export default function Hero() {
   return (
@@ -32,7 +33,7 @@ export default function Hero() {
       </nav>
 
       <div className="absolute left-0 top-[76.5%] w-full h-[19.6%]">
-        <Wordmark delays={LETTER_DELAYS} />
+        <Wordmark delay={WORDMARK_DELAY} />
       </div>
 
       <Brush
