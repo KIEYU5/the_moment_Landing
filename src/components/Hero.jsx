@@ -1,4 +1,4 @@
-import unionLogo from "../assets/union-logo.svg";
+import Brush from "./Brush";
 import Reveal from "./Reveal";
 import Wordmark from "./Wordmark";
 
@@ -9,11 +9,11 @@ const NAV_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-/* Intro timeline: nav drops in, "THE" rises, the blue brush paints the M
-   left to right, then "OMENT" finishes the wordmark. */
-const NAV_STEP = 70;
-const LETTER_DELAYS = [300, 365, 430, 620, 685, 750, 815, 880];
-const BRUSH_DELAY = 500;
+/* Intro timeline: nav drops in, "THE" rises, the blue M is painted stroke by
+   stroke, and "OMENT" lands as the last brush stroke sweeps down. */
+const NAV_STEP = 60;
+const BRUSH_DELAY = 520;
+const LETTER_DELAYS = [260, 320, 380, 1240, 1300, 1360, 1420, 1480];
 
 export default function Hero() {
   return (
@@ -35,13 +35,10 @@ export default function Hero() {
         <Wordmark delays={LETTER_DELAYS} />
       </div>
 
-      <Reveal
-        variant="reveal-brush"
+      <Brush
         delay={BRUSH_DELAY}
         className="absolute left-[30.5%] top-[73.9%] w-[15.1%] h-[25.8%]"
-      >
-        <img src={unionLogo} alt="" className="block w-full h-full" />
-      </Reveal>
+      />
     </section>
   );
 }

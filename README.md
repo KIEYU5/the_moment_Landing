@@ -34,6 +34,7 @@ src/
   components/
     Reveal.jsx         진입 시 나타나는 래퍼
     Wordmark.jsx       THE MOMENT 워드마크 (글자별 애니메이션용 인라인 SVG)
+    Brush.jsx          파란 M 붓터치 (획을 따라 그려지는 마스크)
     Hero.jsx           #(top)    내비 + THE MOMENT 워드마크
     Intro.jsx          #about    회사 소개 · 철학
     Values.jsx         #service  마퀴 티커 + 핵심 가치 3
@@ -69,17 +70,32 @@ src/
 | `reveal-up` (기본) | 아래에서 위로 + 페이드 |
 | `reveal-left` | 왼쪽에서 슬라이드 |
 | `reveal-scale` | 살짝 확대되며 페이드 |
-| `reveal-brush` | 왼쪽 → 오른쪽 `clip-path` 와이프 (Hero의 파란 M) |
 
 Hero는 진입 시 내비 → `THE` → 붓터치 `M` → `OMENT` 순으로 이어집니다. 타이밍
 상수는 [`Hero.jsx`](src/components/Hero.jsx) 상단에 모아 두었습니다.
 
-주의할 점 두 가지:
+### 붓터치 (`Brush.jsx`)
+
+`THE MOMENT`의 `M` 자리에 들어가는 파란 마크는 붓으로 그린 그림입니다.
+사각형으로 훑어 내리는 대신, 획의 중심선을 따라간 굵은 패스 3개
+(왼쪽 다리+꼬리 → 가운데 V → 오른쪽 다리)로 아트웍을 마스킹하고
+`stroke-dashoffset`을 0으로 보내 **실제로 칠하듯이** 나타냅니다.
+
+- 좌표는 아트웍 자체의 `217.825 × 209.331` viewBox 기준입니다.
+- `pathLength="1"`로 길이를 정규화해 `getTotalLength()` 없이 `strokeDasharray="1"`,
+  `stroke-dashoffset: 1 → 0`으로 제어합니다.
+- 마스크 그룹에 약한 `feGaussianBlur`를 걸어 획 끝이 번지듯 들어옵니다.
+- 획 폭은 붓이 가장 넓게 퍼지는 지점을 덮되 옆 획을 침범하지 않도록 개별 지정.
+  현재 설정으로 아트웍의 99.7%를 덮습니다 — 폭을 줄이면 붓의 일부가 영구히
+  잘리므로 중심선을 바꿀 때 함께 확인하세요.
+
+주의할 점:
 
 - `Reveal` 요소에 Tailwind `transition-*` 유틸리티를 같이 쓰면 리빌 트랜지션을
   덮어씁니다. hover 효과 등은 자식 요소에 두세요.
-- `clip-path`는 `none`과 보간되지 않습니다. `reveal-brush`의 양끝이 모두
-  `inset()`인 이유입니다.
+- `useInView`의 `threshold`는 0이 기본입니다. 뷰포트보다 큰 요소는 비율
+  threshold에 영원히 도달하지 못해 리빌이 아예 발화하지 않습니다. 시점 조절은
+  `rootMargin`으로 하세요.
 
 `prefers-reduced-motion: reduce`에서는 리빌의 숨김 상태 자체가 적용되지 않고
 마퀴와 부드러운 스크롤도 멈춥니다.

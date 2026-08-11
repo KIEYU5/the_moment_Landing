@@ -42,7 +42,6 @@ body {
 .reveal-up,
 .reveal-left,
 .reveal-scale,
-.reveal-brush,
 .wordmark-letter {
   transition-property: opacity, transform, clip-path;
   transition-duration: 700ms;
@@ -65,17 +64,6 @@ body {
     transform: scale(0.94);
   }
 
-  /* Both ends must be inset() — clip-path does not interpolate to `none`,
-     it would snap instead of wiping. */
-  .reveal-brush {
-    transition-duration: 1200ms;
-    clip-path: inset(0 0 0 0);
-  }
-
-  .reveal-brush:not(.is-in) {
-    clip-path: inset(0 100% 0 0);
-  }
-
   .wordmark-letter {
     transition-duration: 900ms;
     transform-box: fill-box;
@@ -85,6 +73,22 @@ body {
   .wordmark-letter:not(.is-in) {
     opacity: 0;
     transform: translateY(45%);
+  }
+}
+
+/* ---------- painted brush stroke (Hero M) ----------
+   The mask paths are drawn on with stroke-dashoffset over a normalised
+   pathLength of 1, so each gesture appears the way it was painted. */
+
+.brush-stroke {
+  stroke-dashoffset: 0;
+  transition-property: stroke-dashoffset;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .brush-stroke:not(.is-in) {
+    stroke-dashoffset: 1;
   }
 }
 

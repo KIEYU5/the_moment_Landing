@@ -15,7 +15,7 @@ const LETTERS = [
 ];
 
 export default function Wordmark({ delays = [], className = "" }) {
-  const [ref, inView] = useInView({ threshold: 0 });
+  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
 
   return (
     <svg
