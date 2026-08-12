@@ -1,3 +1,4 @@
+import Faceted from "./Faceted";
 import Reveal from "./Reveal";
 
 const PHILOSOPHY = [
@@ -14,9 +15,9 @@ export default function Intro() {
   return (
     <section id="about" className="relative bg-white w-full">
       <div className="px-gutter py-section">
-        <Reveal as="h2" className="font-bold text-[#e9e9e9] text-display">
+        <Faceted as="h2" className="font-bold text-[#e9e9e9] text-display">
           For The Moment &amp; For Every Day
-        </Reveal>
+        </Faceted>
 
         <div className="mt-block flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
           <Reveal

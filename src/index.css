@@ -49,6 +49,16 @@
   box-sizing: border-box;
 }
 
+/* Shards start displaced well outside the box they belong to, so without this
+   every entrance hands the page a horizontal scrollbar. `clip` rather than
+   `hidden`: hidden on one axis forces the other into a scroll container, and
+   it also lets the pieces read as arriving from off screen rather than being
+   cut off at the text. */
+section,
+footer {
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   background: #ffffff;
@@ -140,6 +150,29 @@ body {
     transition-duration: 0s;
     transform: translate(var(--fx), var(--fy)) rotate(var(--fr))
       skewX(var(--fk)) scale(var(--fs));
+  }
+}
+
+/* ---------- shattered glass ----------
+   Same idea as the wordmark facets, driven off the element's own box so it
+   works on any block. Each shard is a clipped copy of the content; releasing
+   the transforms slides the pieces back into one image. */
+
+.glass-shard {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition-property: transform, opacity;
+  transition-duration: var(--gd, 950ms), calc(var(--gd, 950ms) * 0.5);
+  transition-timing-function: cubic-bezier(0.25, 0.9, 0.3, 1), ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glass-shard:not(.is-in) {
+    opacity: 0;
+    transition-duration: 0s;
+    transform: translate(var(--gx), var(--gy)) rotate(var(--gr))
+      skewX(var(--gk)) scale(var(--gs));
   }
 }
 

@@ -106,6 +106,29 @@ Hero는 이 스케일 밖입니다 — 워드마크는 글자가 아니라 아�
 Hero는 진입 시 내비 → 붓터치 `M`(세공) → 워드마크 세공면 정렬 순으로 이어집니다.
 타이밍 상수는 [`Hero.jsx`](src/components/Hero.jsx) 상단에 모아 두었습니다.
 
+### 유리 파편 (`Faceted.jsx`)
+
+브랜드 컨셉은 **유리를 깨뜨리는 것 = 기존 상식을 깨는 것**입니다. 히어로
+워드마크에만 있던 그 처리를 어디에나 쓸 수 있게 뺐습니다.
+
+```jsx
+<Faceted as="h2" className="text-display font-bold">
+  Our <span className="text-[#4a80f8]">Project</span>
+</Faceted>
+```
+
+- SVG가 아니라 **CSS `clip-path` 퍼센트**입니다. `clip-path`도 `translate`도
+  요소 자기 박스 기준이라 크기와 무관하게 한 벌의 숫자로 동작합니다.
+- 내용을 **파편 수만큼 복제**합니다(현재 20개). 짧은 문구에만 쓰세요.
+- 첫 번째 사본은 `opacity-0`으로 두어 레이아웃과 접근성 트리를 담당하고,
+  파편들은 `aria-hidden`입니다.
+- 파편은 자기 박스 바깥으로 크게 벗어나므로 `section`/`footer`에
+  `overflow-x: clip`이 걸려 있습니다. 없으면 등장할 때마다 가로 스크롤바가
+  생깁니다.
+
+기하는 [`src/lib/facets.js`](src/lib/facets.js)에서 `Wordmark`와 공유합니다.
+격자는 단위 정사각형에서 만들고 각자 자기 좌표계로 확대합니다.
+
 ### 워드마크 세공면 (`Wordmark.jsx`)
 
 워드마크 띠를 삼각형 72개로 자르고, **각 삼각형이 자기 클립을 통해 워드마크

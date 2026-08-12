@@ -1,13 +1,43 @@
+import Faceted from "./Faceted";
 import Reveal from "./Reveal";
 
-const SUB_PROJECTS = [
-  { label: "sub project hg", explain: "EXPLAIN" },
-  { label: "sub project rg", explain: "EXPLAIN" },
-  { label: "sub project eg", explain: "EXPLAIN" },
+/* Laid out as fragments rather than a tidy row: spans, starts and offsets
+   differ per card so the grid reads as something broken apart and left where
+   it fell. Collapses to a plain stack below lg, where a scattered grid would
+   only be a scroll. */
+const PROJECTS = [
+  {
+    label: "main project dg",
+    explain: "EXPLAIN",
+    place: "lg:col-span-7",
+    height: "h-[420px] lg:h-[620px]",
+    offset: "",
+  },
+  {
+    label: "sub project hg",
+    explain: "EXPLAIN",
+    place: "lg:col-span-4 lg:col-start-9",
+    height: "h-[300px] lg:h-[380px]",
+    offset: "lg:mt-[112px]",
+  },
+  {
+    label: "sub project rg",
+    explain: "EXPLAIN",
+    place: "lg:col-span-5 lg:col-start-2",
+    height: "h-[300px] lg:h-[360px]",
+    offset: "lg:mt-[64px]",
+  },
+  {
+    label: "sub project eg",
+    explain: "EXPLAIN",
+    place: "lg:col-span-5 lg:col-start-8",
+    height: "h-[300px] lg:h-[440px]",
+    offset: "lg:-mt-[56px]",
+  },
 ];
 
 const cardClass =
-  "group flex flex-col justify-between bg-[#d9d9d9] p-4 sm:p-6 " +
+  "group flex flex-col justify-between bg-[#d9d9d9] p-4 sm:p-6 h-full " +
   "transition duration-700 ease-out hover:-translate-y-2 " +
   "hover:shadow-[0_24px_48px_-24px_rgba(41,43,47,0.45)]";
 
@@ -15,43 +45,31 @@ export default function Projects() {
   return (
     <section id="work" className="relative bg-white w-full">
       <div className="px-gutter py-section">
-        <Reveal
+        <Faceted
           as="h2"
           className="font-bold text-[#292b2f] text-display mb-block"
         >
           Our <span className="text-[#4a80f8]">Project</span>
-        </Reveal>
+        </Faceted>
 
-        <div className="flex flex-col md:flex-row gap-5">
-          <Reveal className="w-full md:w-[29.7%] md:shrink-0">
-            <div className={`${cardClass} h-[420px] md:h-[733px]`}>
-              <p className="font-bold text-black text-title transition-colors duration-700 ease-out group-hover:text-[#4a80f8]">
-                TITLE
-              </p>
-              <p className="font-bold text-black text-label">main project dg</p>
-              <p className="font-semibold text-[#555962] text-body">EXPLAIN</p>
-            </div>
-          </Reveal>
-
-          <div className="flex flex-col md:flex-row gap-5 flex-1 min-w-0">
-            {SUB_PROJECTS.map((p, i) => (
-              <Reveal
-                key={p.label}
-                delay={140 + i * 120}
-                className="w-full md:flex-1 md:min-w-0"
-              >
-                <div className={`${cardClass} h-[280px] md:h-[398px]`}>
-                  <p className="font-bold text-black text-title transition-colors duration-700 ease-out group-hover:text-[#4a80f8]">
-                    TITLE
-                  </p>
-                  <p className="font-bold text-black text-label">{p.label}</p>
-                  <p className="font-semibold text-[#555962] text-body">
-                    {p.explain}
-                  </p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {PROJECTS.map((p, i) => (
+            <Reveal
+              key={p.label}
+              delay={i * 120}
+              className={`w-full ${p.place} ${p.offset} ${p.height}`}
+            >
+              <div className={cardClass}>
+                <p className="font-bold text-black text-title transition-colors duration-700 ease-out group-hover:text-[#4a80f8]">
+                  TITLE
+                </p>
+                <p className="font-bold text-black text-label">{p.label}</p>
+                <p className="font-semibold text-[#555962] text-body">
+                  {p.explain}
+                </p>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>

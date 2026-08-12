@@ -1,5 +1,6 @@
 import { useId } from "react";
 import useInView from "../hooks/useInView";
+import { bleedVertex, buildFacetGrid, rnd } from "../lib/facets";
 
 /* "THE MOMENT" minus the M — the M is the blue brush stroke drawn by the
    Union logo, which sits in the gap between "THE" and "OMENT". Paths are
@@ -89,65 +90,16 @@ function sourceSpan(tri, cx, cy, tx, ty, rot, skew, scale) {
   return [lo, hi];
 }
 
-function rnd(i) {
-  const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
-
 function buildFacets() {
-  const cw = VIEW_W / COLS;
-  const ch = BAND_H / ROWS;
+  /* The shared grid works in the unit square; scale it onto the band. */
+  const scaled = buildFacetGrid({ cols: COLS, rows: ROWS }).map((facet) => ({
+    points: facet.points.map((p) => ({
+      x: p.x * VIEW_W,
+      y: BAND_TOP + p.y * BAND_H,
+    })),
+  }));
 
-  const grid = [];
-  for (let j = 0; j <= ROWS; j++) {
-    grid[j] = [];
-    for (let i = 0; i <= COLS; i++) {
-      const onEdgeX = i === 0 || i === COLS;
-      const onEdgeY = j === 0 || j === ROWS;
-      grid[j][i] = {
-        x: i * cw + (onEdgeX ? 0 : (rnd(i * 31 + j * 7) - 0.5) * cw * 0.55),
-        y:
-          BAND_TOP +
-          j * ch +
-          (onEdgeY ? 0 : (rnd(i * 13 + j * 71) - 0.5) * ch * 0.55),
-      };
-    }
-  }
-
-  const triangles = [];
-  for (let j = 0; j < ROWS; j++) {
-    for (let i = 0; i < COLS; i++) {
-      const a = grid[j][i];
-      const b = grid[j][i + 1];
-      const c = grid[j + 1][i + 1];
-      const d = grid[j + 1][i];
-      // alternate the split so the facets do not all lean the same way
-      const pair =
-        (i + j) % 2 === 0
-          ? [
-              [a, b, c],
-              [a, c, d],
-            ]
-          : [
-              [a, b, d],
-              [b, c, d],
-            ];
-      triangles.push(...pair);
-    }
-  }
-
-  /* Neighbouring clips share an edge, and two antialiased edges butted
-     together leave a hairline of background showing. Push every vertex a
-     little away from its centroid so the facets overlap instead; in the
-     resolved state they carry identical content, so overlap is invisible. */
-  const bleed = (p, cx, cy) => {
-    const dx = p.x - cx;
-    const dy = p.y - cy;
-    const len = Math.hypot(dx, dy) || 1;
-    return { x: p.x + (dx / len) * 0.9, y: p.y + (dy / len) * 0.9 };
-  };
-
-  return triangles.map((tri, k) => {
+  return scaled.map(({ points: tri }, k) => {
     const cx = (tri[0].x + tri[1].x + tri[2].x) / 3;
     const cy = (tri[0].y + tri[1].y + tri[2].y) / 3;
     const r1 = rnd(k * 7.3 + 1);
@@ -172,7 +124,7 @@ function buildFacets() {
 
     return {
       points: tri
-        .map((p) => bleed(p, cx, cy))
+        .map((p) => bleedVertex(p, cx, cy, 0.9))
         .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
         .join(" "),
       glyphs: LETTER_X.flatMap(([a, b], gi) =>

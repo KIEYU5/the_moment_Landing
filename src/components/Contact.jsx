@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Faceted from "./Faceted";
 import Reveal from "./Reveal";
 
 const FIELDS = [
@@ -32,12 +33,9 @@ export default function Contact() {
   return (
     <section id="contact" className="relative bg-white w-full">
       <div className="px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
-        <Reveal
-          as="h2"
-          className="font-bold text-[#292b2f] text-display"
-        >
+        <Faceted as="h2" className="font-bold text-[#292b2f] text-display">
           Contact <span className="text-[#4a80f8]">Us</span>
-        </Reveal>
+        </Faceted>
 
         <form
           onSubmit={handleSubmit}
