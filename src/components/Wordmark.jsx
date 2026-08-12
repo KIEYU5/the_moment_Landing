@@ -29,35 +29,51 @@ const LETTER_X = [
   [1313.2, 1440],
 ];
 
-/* The band is diced into triangles and every triangle shows the whole
-   wordmark through its own clip, each one displaced and turned a little.
-   Read together they are one object seen across the faces of a cut stone:
-   the letterforms break across the facet seams, then slide into register.
+/* The band is cut into shards and every shard shows the whole wordmark
+   through its own clip, each one displaced and turned a little, so the
+   letterforms break across the cuts and then slide into register.
 
-   The band runs past the glyphs top and bottom so no facet edge lands on
-   the cap line, and the grid corners stay unjittered so the triangles tile
-   the rectangle exactly — a gap here would punch a hole in a letter. */
+   The cuts do not close up. Each shard is pulled in off its own centroid so
+   a hairline of background stays open along every seam — the wordmark reads
+   as cracked glass standing still, and the animation breaks it along the
+   same lines it already shows. This is the mark, not an effect on it.
+
+   Shard count is a design decision, not a performance one: a fine grid reads
+   as mosaic or refraction, a coarse one reads as broken. Twenty is coarse
+   enough that each piece carries whole letters.
+
+   The band runs past the glyphs top and bottom so no cut lands along the cap
+   line, and the grid corners stay unjittered so the shards tile the
+   rectangle — move those and the cracks become holes. */
 const VIEW_W = 1440;
 const BAND_TOP = -20;
 const BAND_H = 199;
-const COLS = 12;
-const ROWS = 3;
+const COLS = 5;
+const ROWS = 2;
+const JITTER = 0.75;
+
+/* Half the visible crack width, in viewBox units. The band is 1440 wide and
+   stretches to the hero, so this is ~3px of gap at desktop. */
+const CRACK = 1.6;
 
 /* The M is the facet everything else resolves outward from. */
 const M_CENTRE = 541;
 const SPREAD = 780;
 
-/* Motion envelope. Every facet draws its own values from this range, timing
-   included — a shared duration makes 72 shards arrive as one flat wave. The
-   skew is what sells refraction: a shard that is merely moved reads as a
-   sliding tile, one that is also sheared reads as an image bent by glass. */
-const PUSH_MIN = 36;
-const PUSH_RANGE = 104;
-const LIFT = 96;
-const TURN = 34;
-const SKEW = 16;
-const SCALE_MIN = 0.78;
-const SCALE_RANGE = 0.44;
+/* Motion envelope. Every shard draws its own values from this range, timing
+   included — a shared duration makes them arrive as one flat wave. The skew
+   is what sells glass: a shard that is merely moved reads as a sliding tile,
+   one that is also sheared reads as an image bent through something.
+
+   Twenty large pieces need less travel than seventy small ones did; the same
+   numbers on shards this size read as debris rather than a mark assembling. */
+const PUSH_MIN = 28;
+const PUSH_RANGE = 88;
+const LIFT = 76;
+const TURN = 26;
+const SKEW = 13;
+const SCALE_MIN = 0.84;
+const SCALE_RANGE = 0.32;
 const DUR_MIN = 900;
 const DUR_RANGE = 420;
 const CULL_PAD = 30;
@@ -92,7 +108,11 @@ function sourceSpan(tri, cx, cy, tx, ty, rot, skew, scale) {
 
 function buildFacets() {
   /* The shared grid works in the unit square; scale it onto the band. */
-  const scaled = buildFacetGrid({ cols: COLS, rows: ROWS }).map((facet) => ({
+  const scaled = buildFacetGrid({
+    cols: COLS,
+    rows: ROWS,
+    jitter: JITTER,
+  }).map((facet) => ({
     points: facet.points.map((p) => ({
       x: p.x * VIEW_W,
       y: BAND_TOP + p.y * BAND_H,
@@ -123,8 +143,11 @@ function buildFacets() {
     const hi = Math.max(sHi, Math.max(...tri.map((p) => p.x))) + CULL_PAD;
 
     return {
+      /* Negative: pull each shard in off its centroid so the seams stay
+         open. The sign is the whole design — positive closes the cracks and
+         the mark goes back to being a solid word. */
       points: tri
-        .map((p) => bleedVertex(p, cx, cy, 0.9))
+        .map((p) => bleedVertex(p, cx, cy, -CRACK))
         .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
         .join(" "),
       glyphs: LETTER_X.flatMap(([a, b], gi) =>
