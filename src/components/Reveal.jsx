@@ -14,7 +14,10 @@ export default function Reveal({
   return (
     <Tag
       ref={ref}
-      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+      /* The stagger applies on the way in only. Leaving it set would hold the
+         rearm behind the delay, so a quick scroll back could catch the reset
+         happening on screen. */
+      style={{ transitionDelay: inView && delay ? `${delay}ms` : "0ms" }}
       className={`${variant}${inView ? " is-in" : ""}${className ? ` ${className}` : ""}`}
       {...rest}
     >

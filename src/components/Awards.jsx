@@ -8,7 +8,7 @@ const AWARDS = Array.from({ length: 7 }, () => ({
 
 export default function Awards() {
   return (
-    <section id="awards" className="relative bg-white w-full scroll-mt-16">
+    <section id="awards" className="relative bg-white w-full">
       <div className="px-gutter py-section">
         <Reveal
           as="h2"

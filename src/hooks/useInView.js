@@ -22,9 +22,18 @@ export default function useInView({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setInView(true);
-        observer.disconnect();
+        if (entry.isIntersecting) {
+          setInView(true);
+          return;
+        }
+        /* Rearm, but only once the element is properly off screen. The
+           trigger line sits above the viewport's bottom edge, so resetting
+           the moment it stops intersecting would flip the animation on and
+           off while a scroll hovers around that line. The reset itself is
+           instant — see the transition-duration overrides in index.css — so
+           it is never seen running backwards. */
+        const box = entry.boundingClientRect;
+        if (box.bottom < 0 || box.top > window.innerHeight) setInView(false);
       },
       { threshold, rootMargin },
     );

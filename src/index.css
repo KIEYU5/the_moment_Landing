@@ -43,6 +43,16 @@
 :root {
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   scroll-behavior: smooth;
+  /* Land on section starts so a scroll off the end of one section brings the
+     next one's content up rather than parking between the two. Sections that
+     run taller than the screen stay freely scrollable inside themselves —
+     snapping only takes over at their edges. */
+  scroll-snap-type: y mandatory;
+}
+
+section,
+footer {
+  scroll-snap-align: start;
 }
 
 * {
@@ -88,21 +98,28 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .reveal-up:not(.is-in) {
+  /* The hidden state doubles as the rearmed state: once a section clears the
+     screen its reveals return here so they play again on the next visit.
+     Zero duration is what keeps that reset from being seen running in
+     reverse — only the entry is ever animated. */
+  .reveal-up:not(.is-in),
+  .reveal-left:not(.is-in),
+  .reveal-scale:not(.is-in) {
     opacity: 0;
+    transition-duration: 0s;
+  }
+
+  .reveal-up:not(.is-in) {
     transform: translateY(24px);
   }
 
   .reveal-left:not(.is-in) {
-    opacity: 0;
     transform: translateX(-32px);
   }
 
   .reveal-scale:not(.is-in) {
-    opacity: 0;
     transform: scale(0.94);
   }
-
 }
 
 /* ---------- wordmark facets ----------
@@ -125,6 +142,7 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .facet:not(.is-in) {
     opacity: 0;
+    transition-duration: 0s;
     transform: translate(var(--fx), var(--fy)) rotate(var(--fr))
       skewX(var(--fk)) scale(var(--fs));
   }

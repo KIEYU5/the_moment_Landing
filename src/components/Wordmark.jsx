@@ -229,13 +229,15 @@ export default function Wordmark({ delay = 0, className = "" }) {
             className={`facet${inView ? " is-in" : ""}`}
             style={{
               transformOrigin: `${facet.cx.toFixed(1)}px ${facet.cy.toFixed(1)}px`,
-              transitionDelay: `${(delay + facet.delay).toFixed(0)}ms`,
+              transitionDelay: inView
+                ? `${(delay + facet.delay).toFixed(0)}ms`
+                : "0ms",
               "--fx": `${facet.tx.toFixed(1)}px`,
               "--fy": `${facet.ty.toFixed(1)}px`,
               "--fr": `${facet.rot.toFixed(2)}deg`,
               "--fk": `${facet.skew.toFixed(2)}deg`,
               "--fs": facet.scale.toFixed(3),
-              "--fd": `${facet.duration.toFixed(0)}ms`,
+              "--fd": inView ? `${facet.duration.toFixed(0)}ms` : "0ms",
             }}
           >
             {facet.glyphs.map((gi) => (

@@ -69,7 +69,7 @@ export default function Values() {
   return (
     <section
       id="service"
-      className="relative bg-white w-full overflow-hidden scroll-mt-16"
+      className="relative bg-white w-full overflow-hidden"
     >
       <div className="px-gutter py-section">
         <div className="marquee relative h-[clamp(48px,8.7vw,125px)]">

@@ -13,7 +13,7 @@ const cardClass =
 
 export default function Projects() {
   return (
-    <section id="work" className="relative bg-white w-full scroll-mt-16">
+    <section id="work" className="relative bg-white w-full">
       <div className="px-gutter py-section">
         <Reveal
           as="h2"

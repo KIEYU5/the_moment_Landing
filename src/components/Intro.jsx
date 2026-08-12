@@ -12,7 +12,7 @@ const PHILOSOPHY = [
 
 export default function Intro() {
   return (
-    <section id="about" className="relative bg-white w-full scroll-mt-16">
+    <section id="about" className="relative bg-white w-full">
       <div className="px-gutter py-section">
         <Reveal as="h2" className="font-bold text-[#e9e9e9] text-display">
           For The Moment &amp; For Every Day

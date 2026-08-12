@@ -92,8 +92,15 @@ export default function Brush({ delay = 0, className = "" }) {
                   className={`brush-stroke${inView ? " is-in" : ""}`}
                   style={{
                     strokeWidth: stroke.width,
-                    transitionDelay: `${delay + stroke.delay}ms`,
-                    transitionDuration: `${stroke.duration}ms`,
+                    /* Timing applies while painting on only. Dropping it on
+                       the way out makes the rearm instant, so scrolling back
+                       never catches the strokes un-painting themselves. */
+                    transitionDelay: inView
+                      ? `${delay + stroke.delay}ms`
+                      : "0ms",
+                    transitionDuration: inView
+                      ? `${stroke.duration}ms`
+                      : "0ms",
                   }}
                 />
               ))}

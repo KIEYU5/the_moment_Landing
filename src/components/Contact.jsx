@@ -30,7 +30,7 @@ export default function Contact() {
     "focus:border-[#4a80f8] focus:bg-white placeholder:text-[#292b2f] placeholder:opacity-40";
 
   return (
-    <section id="contact" className="relative bg-white w-full scroll-mt-16">
+    <section id="contact" className="relative bg-white w-full">
       <div className="px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
         <Reveal
           as="h2"
