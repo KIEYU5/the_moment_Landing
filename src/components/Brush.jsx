@@ -10,10 +10,17 @@ import useInView from "../hooks/useInView";
 
    Coordinates follow the artwork's own 217.825 x 209.331 viewBox. Widths are
    set per stroke so the mask always covers the bristle spread at its widest
-   without bleeding into the neighbouring gesture. */
+   without bleeding into the neighbouring gesture.
+
+   Caps are butt, not round. A round cap puts a half disc of half the stroke
+   width ahead of the tip, which reads as a blob leading the brush and reaches
+   far enough sideways to pop the artwork's loose spatter flecks into view on
+   their own. A flat cap is also simply what the edge of a brush looks like.
+   The trailing L segments push each path past the artwork so the flat cap
+   still clears the tail once the stroke is fully drawn. */
 const STROKES = [
   {
-    d: "M106 0 C 106 30 100 55 76 88 C 55 117 28 155 0 185",
+    d: "M106 0 C 106 30 100 55 76 88 C 55 117 28 155 0 185 L -18 204",
     width: 46,
     delay: 0,
     duration: 380,
@@ -25,7 +32,7 @@ const STROKES = [
     duration: 400,
   },
   {
-    d: "M186 0 C 184 25 172 45 173 76 C 174 110 180 145 206 206",
+    d: "M186 0 C 184 25 172 45 173 76 C 174 110 180 145 206 206 L 216 230",
     width: 62,
     delay: 640,
     duration: 400,
@@ -60,7 +67,7 @@ export default function Brush({ delay = 0, className = "" }) {
             height="140%"
             colorInterpolationFilters="sRGB"
           >
-            <feGaussianBlur stdDeviation="2.5" />
+            <feGaussianBlur stdDeviation="1.2" />
           </filter>
 
           <mask
@@ -80,7 +87,7 @@ export default function Brush({ delay = 0, className = "" }) {
                   fill="none"
                   stroke="#fff"
                   strokeDasharray="1"
-                  strokeLinecap="round"
+                  strokeLinecap="butt"
                   strokeLinejoin="round"
                   className={`brush-stroke${inView ? " is-in" : ""}`}
                   style={{
