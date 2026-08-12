@@ -16,10 +16,22 @@ const NAV_STEP = 60;
 const BRUSH_DELAY = 300;
 const WORDMARK_DELAY = 1150;
 
+/* The hero holds the full viewport so nothing below it shows on first paint.
+   The wordmark keeps its own 1440:159 ratio and sits on the bottom edge
+   rather than at a percentage of the hero height — tying it to the height
+   would stretch the letterforms as the viewport gets taller.
+
+   Everything around it is expressed as a percentage of width, which is what
+   padding percentages resolve against, so the whole group scales as one no
+   matter how tall the screen is. The brush offsets are the Figma values
+   (left 30.5% / top 73.9% / w 15.1% / h 25.8% of a 1440x810 frame)
+   re-based onto the wordmark box: pb-[2.19%] below the mark, and a brush that
+   overhangs it by -13.25% on top at 131.4% of its height. */
+
 export default function Hero() {
   return (
-    <section className="relative w-full max-w-[1440px] mx-auto aspect-[1440/810] overflow-hidden bg-white">
-      <nav className="absolute top-[2.5%] left-1/2 -translate-x-1/2 flex items-center gap-[clamp(16px,3.3vw,48px)] whitespace-nowrap">
+    <section className="relative w-full min-h-dvh flex flex-col overflow-hidden bg-white">
+      <nav className="shrink-0 flex items-center justify-center gap-[clamp(16px,3.3vw,48px)] whitespace-nowrap pt-5 sm:pt-6">
         {NAV_LINKS.map((link, i) => (
           <Reveal key={link.label} delay={i * NAV_STEP}>
             <a
@@ -32,14 +44,15 @@ export default function Hero() {
         ))}
       </nav>
 
-      <div className="absolute left-0 top-[76.5%] w-full h-[19.6%]">
-        <Wordmark delay={WORDMARK_DELAY} />
+      <div className="mt-auto w-full pb-[2.19%]">
+        <div className="relative w-full aspect-[1440/159]">
+          <Wordmark delay={WORDMARK_DELAY} />
+          <Brush
+            delay={BRUSH_DELAY}
+            className="absolute left-[30.5%] top-[-13.25%] w-[15.1%] h-[131.4%]"
+          />
+        </div>
       </div>
-
-      <Brush
-        delay={BRUSH_DELAY}
-        className="absolute left-[30.5%] top-[73.9%] w-[15.1%] h-[25.8%]"
-      />
     </section>
   );
 }
