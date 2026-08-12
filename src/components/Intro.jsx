@@ -13,8 +13,8 @@ const PHILOSOPHY = [
 export default function Intro() {
   return (
     <section id="about" className="relative bg-white w-full scroll-mt-16">
-      <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-24">
-        <Reveal as="h2" className="font-bold text-[#e9e9e9] text-[clamp(28px,4.4vw,64px)] leading-[1.1]">
+      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:py-24">
+        <Reveal as="h2" className="font-bold text-[#e9e9e9] text-display">
           For The Moment &amp; For Every Day
         </Reveal>
 
@@ -22,7 +22,7 @@ export default function Intro() {
           <Reveal
             as="p"
             delay={120}
-            className="font-bold text-[#292b2f] text-[clamp(20px,2.2vw,32px)] leading-normal"
+            className="font-bold text-[#292b2f] text-lead"
           >
             순간을 혁신하는 Development Partner
             <br />
@@ -30,13 +30,13 @@ export default function Intro() {
               as="span"
               variant="reveal-scale"
               delay={320}
-              className="inline-block text-[#4a80f8] text-[clamp(32px,4.4vw,64px)]"
+              className="inline-block text-[#4a80f8] text-display"
             >
               더모먼트
             </Reveal>
           </Reveal>
 
-          <div className="font-semibold text-[#555962] text-[15px] sm:text-[16px] leading-[24px] max-w-[420px]">
+          <div className="font-semibold text-[#555962] text-body max-w-[420px]">
             {PHILOSOPHY.map((block, i) => (
               <Reveal as="p" key={i} delay={i * 90} className="mb-6 last:mb-0">
                 {block.map((line, j) => (

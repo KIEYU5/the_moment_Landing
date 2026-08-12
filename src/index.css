@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* Type scale by role. Sections used about twenty ad-hoc sizes for what turned
+   out to be seven jobs; these replace them so a heading is the same heading
+   wherever it appears. The Hero is deliberately outside this — its wordmark
+   is artwork, not type. Weight and colour stay on the element, since the same
+   role is set in ink or grey depending on the section. */
+@theme {
+  --text-display: clamp(28px, 4.4vw, 64px);
+  --text-display--line-height: 1.1;
+
+  --text-title: clamp(26px, 2.6vw, 36px);
+  --text-title--line-height: 1.2;
+
+  --text-lead: clamp(20px, 2.2vw, 32px);
+  --text-lead--line-height: 1.4;
+
+  --text-subtitle: clamp(18px, 1.8vw, 24px);
+  --text-subtitle--line-height: 1.35;
+
+  --text-label: 20px;
+  --text-label--line-height: 1.4;
+
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+
+  --text-caption: 14px;
+  --text-caption--line-height: 1.5;
+}
+
 :root {
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   scroll-behavior: smooth;

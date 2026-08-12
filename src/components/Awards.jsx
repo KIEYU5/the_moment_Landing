@@ -9,10 +9,10 @@ const AWARDS = Array.from({ length: 7 }, () => ({
 export default function Awards() {
   return (
     <section id="awards" className="relative bg-white w-full scroll-mt-16">
-      <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-[160px]">
+      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:py-[160px]">
         <Reveal
           as="h2"
-          className="font-bold text-[#292b2f] text-[clamp(28px,4.4vw,64px)] mb-10 sm:mb-16 lg:mb-[186px]"
+          className="font-bold text-[#292b2f] text-display mb-10 sm:mb-16 lg:mb-[186px]"
         >
           Our <span className="text-[#4a80f8]">Awards</span>
         </Reveal>
@@ -23,13 +23,13 @@ export default function Awards() {
               key={i}
               variant="reveal-left"
               delay={i * 90}
-              className="grid grid-cols-3 items-center gap-3 sm:gap-4 text-[13px] sm:text-[16px]"
+              className="grid grid-cols-3 items-center gap-3 sm:gap-4 text-body"
             >
               <p className="font-bold text-[#292b2f]">{a.title}</p>
-              <p className="font-normal text-[#555962] leading-[24px] text-center">
+              <p className="font-normal text-[#555962] text-center">
                 {a.subtitle}
               </p>
-              <p className="font-normal text-[#555962] leading-[24px] text-right">
+              <p className="font-normal text-[#555962] text-right">
                 {a.explain}
               </p>
             </Reveal>

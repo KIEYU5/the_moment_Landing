@@ -25,16 +25,16 @@ export default function Contact() {
   };
 
   const inputClass =
-    "bg-[#f5f5f5] w-full px-4 py-3 font-bold text-[#292b2f] text-[14px] outline-none " +
+    "bg-[#f5f5f5] w-full px-4 py-3 font-bold text-[#292b2f] text-body outline-none " +
     "border border-transparent transition-colors duration-300 " +
     "focus:border-[#4a80f8] focus:bg-white placeholder:text-[#292b2f] placeholder:opacity-40";
 
   return (
     <section id="contact" className="relative bg-white w-full scroll-mt-16">
-      <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-20 py-16 sm:py-20 lg:py-[160px] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-8 items-center">
+      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:py-[160px] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-8 items-center">
         <Reveal
           as="h2"
-          className="font-bold text-[#292b2f] text-[clamp(28px,4.4vw,64px)]"
+          className="font-bold text-[#292b2f] text-display"
         >
           Contact <span className="text-[#4a80f8]">Us</span>
         </Reveal>
@@ -53,11 +53,11 @@ export default function Contact() {
               >
                 <label
                   htmlFor={id}
-                  className="font-bold text-[#292b2f] text-[20px]"
+                  className="font-bold text-[#292b2f] text-label"
                 >
                   {field.title}
                 </label>
-                <p className="font-normal text-[#555962] text-[14px]">
+                <p className="font-normal text-[#555962] text-caption">
                   {field.sub}
                 </p>
                 {field.type === "textarea" ? (
@@ -90,14 +90,14 @@ export default function Contact() {
           <Reveal delay={360} className="flex items-center gap-4">
             <button
               type="submit"
-              className="bg-[#292b2f] text-white font-bold text-[16px] px-8 py-4 transition-colors duration-300 hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
+              className="bg-[#292b2f] text-white font-bold text-body px-8 py-4 transition-colors duration-300 hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
             >
               Send
             </button>
             <p
               role="status"
               aria-live="polite"
-              className={`font-semibold text-[14px] text-[#4a80f8] transition-opacity duration-300 ${
+              className={`font-semibold text-caption text-[#4a80f8] transition-opacity duration-300 ${
                 status === "sent" ? "opacity-100" : "opacity-0"
               }`}
             >

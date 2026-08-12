@@ -53,7 +53,7 @@ function Ticker({ color, className = "" }) {
           {[...WORDS, ...WORDS].map((word, i) => (
             <p
               key={i}
-              className="font-bold text-[clamp(28px,4.4vw,64px)] shrink-0"
+              className="font-bold text-display shrink-0"
               style={{ color }}
             >
               {word}
@@ -71,7 +71,7 @@ export default function Values() {
       id="service"
       className="relative bg-white w-full overflow-hidden scroll-mt-16"
     >
-      <div className="max-w-[1440px] mx-auto py-16 sm:py-20 lg:pb-[120px]">
+      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:pb-[120px]">
         <div className="marquee relative h-[clamp(48px,8.7vw,125px)]">
           <Ticker color="#292b2f" className="absolute top-0 left-0 w-full" />
           <Ticker
@@ -80,7 +80,7 @@ export default function Values() {
           />
         </div>
 
-        <div className="mt-16 sm:mt-20 lg:mt-[100px] px-5 sm:px-8 md:px-12 lg:px-20 flex flex-col items-stretch lg:items-end gap-14 sm:gap-16 lg:gap-[160px]">
+        <div className="mt-16 sm:mt-20 lg:mt-[100px] flex flex-col items-stretch lg:items-end gap-14 sm:gap-16 lg:gap-[160px]">
           {VALUES.map((v) => (
             <div
               key={v.num}
@@ -89,7 +89,7 @@ export default function Values() {
               <Reveal
                 as="p"
                 variant="reveal-left"
-                className="font-bold text-[#4a80f8] text-[18px] sm:text-[20px] shrink-0"
+                className="font-bold text-[#4a80f8] text-label shrink-0"
               >
                 {v.tag}
               </Reveal>
@@ -98,7 +98,7 @@ export default function Values() {
                   as="p"
                   variant="reveal-scale"
                   delay={120}
-                  className="font-bold text-[#e9e9e9] text-[26px] sm:text-[32px] shrink-0"
+                  className="font-bold text-[#e9e9e9] text-title shrink-0"
                 >
                   {v.num}
                 </Reveal>
@@ -106,14 +106,14 @@ export default function Values() {
                   <Reveal
                     as="p"
                     delay={200}
-                    className="font-bold text-[#292b2f] text-[20px] sm:text-[26px] lg:text-[32px] max-w-[688px] leading-normal"
+                    className="font-bold text-[#292b2f] text-lead max-w-[688px]"
                   >
                     {v.title}
                   </Reveal>
                   <Reveal
                     as="p"
                     delay={320}
-                    className="font-semibold text-[#555962] text-[16px] leading-[24px]"
+                    className="font-semibold text-[#555962] text-body"
                   >
                     {v.sub}
                   </Reveal>
