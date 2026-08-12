@@ -43,18 +43,6 @@
 :root {
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   scroll-behavior: smooth;
-  /* Land on section starts so a scroll off the end of one section brings the
-     next one's content up rather than parking between the two. Proximity, not
-     mandatory: mandatory pulls the viewport around under the reader's hand,
-     which is what made the page feel like it was fighting back. This settles
-     onto a section when a scroll ends near one and otherwise stays out of
-     the way. */
-  scroll-snap-type: y proximity;
-}
-
-section,
-footer {
-  scroll-snap-align: start;
 }
 
 * {

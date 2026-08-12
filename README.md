@@ -172,16 +172,18 @@ Hero는 진입 시 내비 → 붓터치 `M`(세공) → 워드마크 세공면 �
   거꾸로 재생되는 게 보입니다. CSS는 `:not(.is-in)`에서 `transition-duration: 0s`,
   인라인 지연·지속시간은 컴포넌트가 `inView`일 때만 넣습니다.
 
-## 스냅 스크롤
+## 스냅 스크롤 (보류)
 
-`:root`에 `scroll-snap-type: y mandatory`, 각 `section`/`footer`에
-`scroll-snap-align: start`입니다. 섹션 끝에서 스크롤하면 다음 섹션 머리로
-붙습니다.
+한 번 넣었다 뺐습니다. 섹션 내용이 플레이스홀더인 상태에서는 붙는 느낌을
+판단할 수 없어서, 페이지가 어느 정도 완성된 뒤에 다시 보기로 했습니다.
 
-화면보다 긴 섹션도 안쪽에서는 자유롭게 스크롤됩니다 — 스냅 영역이 뷰포트보다
-크면 그 안의 모든 위치가 유효한 정지 위치이기 때문입니다. 다만 **섹션에
-`scroll-margin-top`을 주면 안 됩니다.** 스냅 위치까지 같이 밀려서 이전 섹션이
-그만큼 걸쳐 보입니다(그래서 `scroll-mt-16`을 제거했습니다).
+다시 넣을 때 필요한 것:
+
+- `:root`에 `scroll-snap-type: y proximity`, 각 `section`/`footer`에
+  `scroll-snap-align: start`
+- `mandatory`는 뷰포트를 강제로 끌어당겨 뻣뻣하게 느껴집니다. `proximity` 권장
+- **섹션에 `scroll-margin-top`을 주면 안 됩니다.** 스냅 위치까지 같이 밀려서
+  이전 섹션이 그만큼 걸쳐 보입니다
 
 ## 남은 작업
 
