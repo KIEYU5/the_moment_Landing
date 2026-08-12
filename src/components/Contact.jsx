@@ -26,7 +26,7 @@ export default function Contact() {
 
   const inputClass =
     "bg-[#f5f5f5] w-full px-4 py-3 font-bold text-[#292b2f] text-body outline-none " +
-    "border border-transparent transition-colors duration-300 " +
+    "border border-transparent transition-colors duration-500 ease-out " +
     "focus:border-[#4a80f8] focus:bg-white placeholder:text-[#292b2f] placeholder:opacity-40";
 
   return (
@@ -90,14 +90,14 @@ export default function Contact() {
           <Reveal delay={360} className="flex items-center gap-4">
             <button
               type="submit"
-              className="bg-[#292b2f] text-white font-bold text-body px-8 py-4 transition-colors duration-300 hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
+              className="bg-[#292b2f] text-white font-bold text-body px-8 py-4 transition-colors duration-500 ease-out hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
             >
               Send
             </button>
             <p
               role="status"
               aria-live="polite"
-              className={`font-semibold text-caption text-[#4a80f8] transition-opacity duration-300 ${
+              className={`font-semibold text-caption text-[#4a80f8] transition-opacity duration-500 ease-out ${
                 status === "sent" ? "opacity-100" : "opacity-0"
               }`}
             >

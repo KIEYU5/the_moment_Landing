@@ -8,7 +8,7 @@ const SUB_PROJECTS = [
 
 const cardClass =
   "group flex flex-col justify-between bg-[#d9d9d9] p-4 sm:p-6 " +
-  "transition duration-500 ease-out hover:-translate-y-2 " +
+  "transition duration-700 ease-out hover:-translate-y-2 " +
   "hover:shadow-[0_24px_48px_-24px_rgba(41,43,47,0.45)]";
 
 export default function Projects() {
@@ -25,7 +25,7 @@ export default function Projects() {
         <div className="flex flex-col md:flex-row gap-5">
           <Reveal className="w-full md:w-[29.7%] md:shrink-0">
             <div className={`${cardClass} h-[420px] md:h-[733px]`}>
-              <p className="font-bold text-black text-title transition-colors duration-500 group-hover:text-[#4a80f8]">
+              <p className="font-bold text-black text-title transition-colors duration-700 ease-out group-hover:text-[#4a80f8]">
                 TITLE
               </p>
               <p className="font-bold text-black text-label">main project dg</p>
@@ -41,7 +41,7 @@ export default function Projects() {
                 className="w-full md:flex-1 md:min-w-0"
               >
                 <div className={`${cardClass} h-[280px] md:h-[398px]`}>
-                  <p className="font-bold text-black text-title transition-colors duration-500 group-hover:text-[#4a80f8]">
+                  <p className="font-bold text-black text-title transition-colors duration-700 ease-out group-hover:text-[#4a80f8]">
                     TITLE
                   </p>
                   <p className="font-bold text-black text-label">{p.label}</p>

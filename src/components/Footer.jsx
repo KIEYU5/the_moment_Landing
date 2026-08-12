@@ -8,7 +8,7 @@ const SOCIAL_LINKS = [
 const LEGAL_LINKS = [{ label: "Privacy Policy", href: "#" }];
 
 const linkClass =
-  "font-bold text-[#292b2f] text-label transition-colors duration-300 hover:text-[#4a80f8]";
+  "font-bold text-[#292b2f] text-label transition-colors duration-500 ease-out hover:text-[#4a80f8]";
 
 export default function Footer() {
   return (

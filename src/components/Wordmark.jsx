@@ -44,7 +44,7 @@ const ROWS = 3;
 
 /* The M is the facet everything else resolves outward from. */
 const M_CENTRE = 541;
-const SPREAD = 620;
+const SPREAD = 780;
 
 /* Motion envelope. Every facet draws its own values from this range, timing
    included — a shared duration makes 72 shards arrive as one flat wave. The
@@ -57,8 +57,8 @@ const TURN = 34;
 const SKEW = 16;
 const SCALE_MIN = 0.78;
 const SCALE_RANGE = 0.44;
-const DUR_MIN = 720;
-const DUR_RANGE = 340;
+const DUR_MIN = 900;
+const DUR_RANGE = 420;
 const CULL_PAD = 30;
 
 /* Which slice of the wordmark ends up framed by a facet at the start of the
@@ -187,7 +187,7 @@ function buildFacets() {
       scale,
       duration: DUR_MIN + r6 * DUR_RANGE,
       delay:
-        (Math.abs(cx - M_CENTRE) / (VIEW_W - M_CENTRE)) * SPREAD + r1 * 90,
+        (Math.abs(cx - M_CENTRE) / (VIEW_W - M_CENTRE)) * SPREAD + r1 * 120,
     };
   });
 }

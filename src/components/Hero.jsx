@@ -14,7 +14,7 @@ const NAV_LINKS = [
    the M and working outward. Wordmark spreads its facet delays internally. */
 const NAV_STEP = 60;
 const BRUSH_DELAY = 300;
-const WORDMARK_DELAY = 1150;
+const WORDMARK_DELAY = 1280;
 
 /* The hero holds the full viewport so nothing below it shows on first paint.
    The wordmark keeps its own 1440:159 ratio and sits on the bottom edge
@@ -36,7 +36,7 @@ export default function Hero() {
           <Reveal key={link.label} delay={i * NAV_STEP}>
             <a
               href={link.href}
-              className="text-[#292b2f] text-[clamp(10px,1.1vw,16px)] font-light transition-colors duration-300 hover:text-[#4a80f8]"
+              className="text-[#292b2f] text-[clamp(10px,1.1vw,16px)] font-light transition-colors duration-500 ease-out hover:text-[#4a80f8]"
             >
               {link.label}
             </a>

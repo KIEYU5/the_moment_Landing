@@ -23,19 +23,19 @@ const STROKES = [
     d: "M106 0 C 106 30 100 55 76 88 C 55 117 28 155 0 185 L -18 204",
     width: 46,
     delay: 0,
-    duration: 380,
+    duration: 500,
   },
   {
     d: "M91 61 Q 103 95 115 124 Q 130 95 166 49",
     width: 58,
-    delay: 320,
-    duration: 400,
+    delay: 400,
+    duration: 540,
   },
   {
     d: "M186 0 C 184 25 172 45 173 76 C 174 110 180 145 206 206 L 216 230",
     width: 62,
-    delay: 640,
-    duration: 400,
+    delay: 820,
+    duration: 540,
   },
 ];
 

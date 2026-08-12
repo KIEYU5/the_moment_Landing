@@ -44,10 +44,12 @@
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   scroll-behavior: smooth;
   /* Land on section starts so a scroll off the end of one section brings the
-     next one's content up rather than parking between the two. Sections that
-     run taller than the screen stay freely scrollable inside themselves —
-     snapping only takes over at their edges. */
-  scroll-snap-type: y mandatory;
+     next one's content up rather than parking between the two. Proximity, not
+     mandatory: mandatory pulls the viewport around under the reader's hand,
+     which is what made the page feel like it was fighting back. This settles
+     onto a section when a scroll ends near one and otherwise stays out of
+     the way. */
+  scroll-snap-type: y proximity;
 }
 
 section,
@@ -93,8 +95,11 @@ body {
 .reveal-left,
 .reveal-scale {
   transition-property: opacity, transform, clip-path;
-  transition-duration: 700ms;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Ease-out cubic rather than quint. Quint leaves almost all of its distance
+     in the first fraction of the duration, so the element appears to jump and
+     then crawl; cubic spreads the travel out and reads as gliding. */
+  transition-duration: 950ms;
+  transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -135,8 +140,10 @@ body {
      and flattens the whole thing into a single wave. Opacity resolves well
      before the move does, so the shards are watched travelling rather than
      fading in on arrival. */
-  transition-duration: var(--fd, 820ms), calc(var(--fd, 820ms) * 0.45);
-  transition-timing-function: cubic-bezier(0.16, 1.42, 0.31, 1), ease-out;
+  transition-duration: var(--fd, 950ms), calc(var(--fd, 950ms) * 0.5);
+  /* No overshoot. Pulling the control point past 1 snapped each shard into
+     place, and 72 of those at once is what made the wordmark land hard. */
+  transition-timing-function: cubic-bezier(0.25, 0.9, 0.3, 1), ease-out;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -155,7 +162,7 @@ body {
 .brush-stroke {
   stroke-dashoffset: 0;
   transition-property: stroke-dashoffset;
-  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  transition-timing-function: cubic-bezier(0.42, 0.04, 0.22, 1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
