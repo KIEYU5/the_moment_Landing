@@ -31,7 +31,7 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative bg-white w-full scroll-mt-16">
-      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:py-[160px] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-8 items-center">
+      <div className="px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
         <Reveal
           as="h2"
           className="font-bold text-[#292b2f] text-display"
@@ -41,7 +41,7 @@ export default function Contact() {
 
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-[660px] lg:ml-auto flex flex-col gap-8 lg:gap-12"
+          className="w-full max-w-[660px] lg:ml-auto flex flex-col gap-stack"
         >
           {FIELDS.map((field, i) => {
             const id = `contact-${field.key}`;

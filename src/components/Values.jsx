@@ -71,7 +71,7 @@ export default function Values() {
       id="service"
       className="relative bg-white w-full overflow-hidden scroll-mt-16"
     >
-      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:pb-[120px]">
+      <div className="px-gutter py-section">
         <div className="marquee relative h-[clamp(48px,8.7vw,125px)]">
           <Ticker color="#292b2f" className="absolute top-0 left-0 w-full" />
           <Ticker
@@ -80,11 +80,11 @@ export default function Values() {
           />
         </div>
 
-        <div className="mt-16 sm:mt-20 lg:mt-[100px] flex flex-col items-stretch lg:items-end gap-14 sm:gap-16 lg:gap-[160px]">
+        <div className="mt-block flex flex-col gap-block">
           {VALUES.map((v) => (
             <div
               key={v.num}
-              className="w-full max-w-[1280px] flex flex-col lg:flex-row items-start justify-between gap-6 lg:gap-8"
+              className="w-full flex flex-col lg:flex-row items-start justify-between gap-stack"
             >
               <Reveal
                 as="p"
@@ -93,7 +93,7 @@ export default function Values() {
               >
                 {v.tag}
               </Reveal>
-              <div className="flex gap-5 sm:gap-8 lg:gap-12 items-start w-full lg:w-auto">
+              <div className="flex gap-stack items-start w-full lg:w-auto">
                 <Reveal
                   as="p"
                   variant="reveal-scale"
@@ -102,7 +102,7 @@ export default function Values() {
                 >
                   {v.num}
                 </Reveal>
-                <div className="flex flex-col gap-5 sm:gap-8 lg:gap-12 min-w-0">
+                <div className="flex flex-col gap-stack min-w-0">
                   <Reveal
                     as="p"
                     delay={200}

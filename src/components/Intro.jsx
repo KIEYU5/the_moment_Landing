@@ -13,12 +13,12 @@ const PHILOSOPHY = [
 export default function Intro() {
   return (
     <section id="about" className="relative bg-white w-full scroll-mt-16">
-      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:py-24">
+      <div className="px-gutter py-section">
         <Reveal as="h2" className="font-bold text-[#e9e9e9] text-display">
           For The Moment &amp; For Every Day
         </Reveal>
 
-        <div className="mt-10 sm:mt-14 lg:mt-[76px] flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-10">
+        <div className="mt-block flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
           <Reveal
             as="p"
             delay={120}

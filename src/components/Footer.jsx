@@ -13,21 +13,21 @@ const linkClass =
 export default function Footer() {
   return (
     <footer className="relative bg-[#fbfbfb] w-full">
-      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10">
+      <div className="px-gutter py-section flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
         <Reveal>
           <p className="font-bold text-[#292b2f] text-title">THE MOMENT</p>
           <p className="font-bold text-[#555962] text-subtitle mt-4">
             A development partner innovating the moment.
           </p>
-          <p className="font-normal text-[#555962] text-caption mt-12 lg:mt-[152px]">
+          <p className="font-normal text-[#555962] text-caption mt-block">
             © 2026 the_moment. All rights reserved.
           </p>
         </Reveal>
 
-        <Reveal delay={140} className="flex gap-16 sm:gap-20">
-          <div className="flex flex-col gap-6 sm:gap-20">
+        <Reveal delay={140} className="flex gap-block">
+          <div className="flex flex-col gap-stack">
             <p className="font-normal text-[#555962] text-caption">SOCIAL</p>
-            <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-stack">
               {SOCIAL_LINKS.map((link, i) => (
                 <a
                   key={i}
@@ -42,9 +42,9 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 sm:gap-20">
+          <div className="flex flex-col gap-stack">
             <p className="font-normal text-[#555962] text-caption">LEGAL</p>
-            <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-stack">
               {LEGAL_LINKS.map((link) => (
                 <a key={link.label} href={link.href} className={linkClass}>
                   {link.label}

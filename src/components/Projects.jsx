@@ -14,10 +14,10 @@ const cardClass =
 export default function Projects() {
   return (
     <section id="work" className="relative bg-white w-full scroll-mt-16">
-      <div className="max-w-[1440px] mx-auto px-10 py-16 sm:py-20 lg:py-[160px]">
+      <div className="px-gutter py-section">
         <Reveal
           as="h2"
-          className="font-bold text-[#292b2f] text-display mb-10 sm:mb-16 lg:mb-[140px]"
+          className="font-bold text-[#292b2f] text-display mb-block"
         >
           Our <span className="text-[#4a80f8]">Project</span>
         </Reveal>

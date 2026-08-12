@@ -5,6 +5,18 @@
    wherever it appears. The Hero is deliberately outside this — its wordmark
    is artwork, not type. Weight and colour stay on the element, since the same
    role is set in ink or grey depending on the section. */
+/* Spacing by role, for the same reason as the type scale. Section padding was
+   96 / 120 / 160 depending on the section and headings sat 76, 140 or 186
+   above their content, which is what made the page read as unrelated blocks.
+   Gutters stay tight and the vertical rhythm runs long, so the page fills its
+   width and breathes between sections rather than the other way round. */
+@theme {
+  --spacing-gutter: 24px;
+  --spacing-section: clamp(96px, 10vw, 180px);
+  --spacing-block: clamp(48px, 6vw, 112px);
+  --spacing-stack: clamp(20px, 2.2vw, 40px);
+}
+
 @theme {
   --text-display: clamp(28px, 4.4vw, 64px);
   --text-display--line-height: 1.1;
