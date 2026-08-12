@@ -74,15 +74,19 @@ body {
 
 .facet {
   transition-property: transform, opacity;
-  transition-duration: 820ms;
-  transition-timing-function: cubic-bezier(0.18, 1.06, 0.28, 1);
+  /* Each facet carries its own duration; a shared one lands all 72 at once
+     and flattens the whole thing into a single wave. Opacity resolves well
+     before the move does, so the shards are watched travelling rather than
+     fading in on arrival. */
+  transition-duration: var(--fd, 820ms), calc(var(--fd, 820ms) * 0.45);
+  transition-timing-function: cubic-bezier(0.16, 1.42, 0.31, 1), ease-out;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .facet:not(.is-in) {
     opacity: 0;
     transform: translate(var(--fx), var(--fy)) rotate(var(--fr))
-      scale(var(--fs));
+      skewX(var(--fk)) scale(var(--fs));
   }
 }
 

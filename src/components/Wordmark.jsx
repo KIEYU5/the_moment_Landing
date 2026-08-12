@@ -44,7 +44,50 @@ const ROWS = 3;
 
 /* The M is the facet everything else resolves outward from. */
 const M_CENTRE = 541;
-const SPREAD = 560;
+const SPREAD = 620;
+
+/* Motion envelope. Every facet draws its own values from this range, timing
+   included — a shared duration makes 72 shards arrive as one flat wave. The
+   skew is what sells refraction: a shard that is merely moved reads as a
+   sliding tile, one that is also sheared reads as an image bent by glass. */
+const PUSH_MIN = 36;
+const PUSH_RANGE = 104;
+const LIFT = 96;
+const TURN = 34;
+const SKEW = 16;
+const SCALE_MIN = 0.78;
+const SCALE_RANGE = 0.44;
+const DUR_MIN = 720;
+const DUR_RANGE = 340;
+const CULL_PAD = 30;
+
+/* Which slice of the wordmark ends up framed by a facet at the start of the
+   move. The shard is displaced, turned, sheared and scaled about its own
+   centroid, so the content on show is the clip run back through the inverse
+   of that — anything cruder either drops fragments mid-flight or gives up the
+   culling by padding for the worst case. */
+function sourceSpan(tri, cx, cy, tx, ty, rot, skew, scale) {
+  const r = (rot * Math.PI) / 180;
+  const k = Math.tan((skew * Math.PI) / 180);
+  const cos = Math.cos(r);
+  const sin = Math.sin(r);
+  const a = scale * cos;
+  const b = scale * (cos * k - sin);
+  const c = scale * sin;
+  const d = scale * (sin * k + cos);
+  const det = a * d - b * c;
+
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const p of tri) {
+    const px = p.x - cx - tx;
+    const py = p.y - cy - ty;
+    const qx = cx + (d * px - b * py) / det;
+    lo = Math.min(lo, qx);
+    hi = Math.max(hi, qx);
+  }
+  return [lo, hi];
+}
 
 function rnd(i) {
   const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
@@ -111,16 +154,21 @@ function buildFacets() {
     const r2 = rnd(k * 3.1 + 5);
     const r3 = rnd(k * 11.7 + 2);
     const r4 = rnd(k * 5.5 + 9);
+    const r5 = rnd(k * 17.9 + 4);
+    const r6 = rnd(k * 23.3 + 6);
     const away = cx < M_CENTRE ? -1 : 1;
-    const tx = away * (24 + r1 * 68);
 
-    /* Which glyphs can show through this facet at any point in the move.
-       The content slides from tx back to 0, so take the union of both ends
-       and pad for the rotation and scale swing. */
-    const x0 = Math.min(...tri.map((p) => p.x));
-    const x1 = Math.max(...tri.map((p) => p.x));
-    const lo = Math.min(x0 - tx, x0) - 45;
-    const hi = Math.max(x1 - tx, x1) + 45;
+    const tx = away * (PUSH_MIN + r1 * PUSH_RANGE);
+    const ty = (r2 - 0.5) * LIFT;
+    const rot = (r3 - 0.5) * TURN;
+    const skew = (r5 - 0.5) * SKEW;
+    const scale = SCALE_MIN + r4 * SCALE_RANGE;
+
+    /* Union of what the facet frames at the start of the move and at rest;
+       the shard travels between the two, and CULL_PAD absorbs the swing. */
+    const [sLo, sHi] = sourceSpan(tri, cx, cy, tx, ty, rot, skew, scale);
+    const lo = Math.min(sLo, Math.min(...tri.map((p) => p.x))) - CULL_PAD;
+    const hi = Math.max(sHi, Math.max(...tri.map((p) => p.x))) + CULL_PAD;
 
     return {
       points: tri
@@ -133,11 +181,13 @@ function buildFacets() {
       cx,
       cy,
       tx,
-      ty: (r2 - 0.5) * 52,
-      rot: (r3 - 0.5) * 18,
-      scale: 0.9 + r4 * 0.26,
+      ty,
+      rot,
+      skew,
+      scale,
+      duration: DUR_MIN + r6 * DUR_RANGE,
       delay:
-        (Math.abs(cx - M_CENTRE) / (VIEW_W - M_CENTRE)) * SPREAD + r1 * 70,
+        (Math.abs(cx - M_CENTRE) / (VIEW_W - M_CENTRE)) * SPREAD + r1 * 90,
     };
   });
 }
@@ -183,7 +233,9 @@ export default function Wordmark({ delay = 0, className = "" }) {
               "--fx": `${facet.tx.toFixed(1)}px`,
               "--fy": `${facet.ty.toFixed(1)}px`,
               "--fr": `${facet.rot.toFixed(2)}deg`,
+              "--fk": `${facet.skew.toFixed(2)}deg`,
               "--fs": facet.scale.toFixed(3),
+              "--fd": `${facet.duration.toFixed(0)}ms`,
             }}
           >
             {facet.glyphs.map((gi) => (
