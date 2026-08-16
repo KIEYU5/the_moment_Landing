@@ -232,6 +232,25 @@ body {
   }
 }
 
+/* ---------- glass field (hero background) ----------
+   Each shard carries the clip that defines it, so this transform throws the
+   fragment itself rather than sliding the reflection behind a fixed window. */
+
+.glass-fleck {
+  transition-property: transform, opacity;
+  transition-duration: var(--kd, 1100ms);
+  transition-timing-function: cubic-bezier(0.16, 0.88, 0.28, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glass-fleck:not(.is-in) {
+    opacity: 0;
+    transition-duration: 0s;
+    transform: translate(var(--kx), var(--ky)) rotate(var(--kr))
+      scale(var(--ks));
+  }
+}
+
 /* ---------- shattered glass ----------
    Same idea as the wordmark facets, driven off the element's own box so it
    works on any block. Each shard is a clipped copy of the content; releasing
