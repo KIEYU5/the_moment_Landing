@@ -11,7 +11,7 @@
    Gutters stay tight and the vertical rhythm runs long, so the page fills its
    width and breathes between sections rather than the other way round. */
 @theme {
-  --spacing-gutter: 24px;
+  --spacing-gutter: 48px;
   --spacing-section: clamp(96px, 10vw, 180px);
   --spacing-block: clamp(48px, 6vw, 112px);
   --spacing-stack: clamp(20px, 2.2vw, 40px);
@@ -75,11 +75,25 @@ body {
   }
 }
 
+@keyframes marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 .animate-marquee {
   animation: marquee-left 40s linear infinite;
 }
 
-.marquee:hover .animate-marquee {
+.animate-marquee-reverse {
+  animation: marquee-right 40s linear infinite;
+}
+
+.marquee:hover .animate-marquee,
+.marquee:hover .animate-marquee-reverse {
   animation-play-state: paused;
 }
 
@@ -197,7 +211,8 @@ body {
     scroll-behavior: auto;
   }
 
-  .animate-marquee {
+  .animate-marquee,
+  .animate-marquee-reverse {
     animation: none;
   }
 }

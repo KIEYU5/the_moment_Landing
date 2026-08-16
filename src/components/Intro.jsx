@@ -14,11 +14,7 @@ export default function Intro() {
   return (
     <section id="about" className="relative bg-white w-full">
       <div className="px-gutter py-section">
-        <Faceted as="h2" className="font-bold text-[#e9e9e9] text-display">
-          For The Moment &amp; For Every Day
-        </Faceted>
-
-        <div className="mt-block flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
           <div>
             <Faceted
               as="p"

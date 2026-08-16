@@ -39,9 +39,8 @@ src/
     Intro.jsx          #about    회사 소개 · 철학
     Values.jsx         #service  마퀴 티커 + 핵심 가치 3
     Projects.jsx       #work     프로젝트 카드
-    Awards.jsx         #awards   수상 이력
     Contact.jsx        #contact  문의 폼
-    Footer.jsx                   푸터
+    Footer.jsx                   푸터 (잉크 / 브랜드 블루 2분할)
 ```
 
 ## 디자인 토큰
@@ -62,7 +61,7 @@ src/
 
 | 클래스 | 값 | 쓰는 곳 |
 | --- | --- | --- |
-| `px-gutter` | `24px` | 모든 섹션의 좌우 여백 |
+| `px-gutter` | `48px` | 모든 섹션의 좌우 여백 |
 | `py-section` | `clamp(96px, 10vw, 180px)` | 모든 섹션의 상하 여백 |
 | `mb/mt/gap-block` | `clamp(48px, 6vw, 112px)` | 제목↔본문, 큰 덩어리 사이 |
 | `gap-stack` | `clamp(20px, 2.2vw, 40px)` | 한 덩어리 안의 항목 사이 |

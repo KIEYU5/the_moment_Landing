@@ -39,20 +39,22 @@ const VALUES = [
 
 /* Each track holds the word list twice so the -50% marquee loops seamlessly;
    two tracks side by side keep the strip filled at any viewport width. */
-function Ticker({ color, className = "" }) {
+function Ticker({ color, reverse = false, className = "" }) {
+  const track = reverse ? "animate-marquee-reverse" : "animate-marquee";
+
   return (
     <div
       aria-hidden
       className={`flex whitespace-nowrap overflow-hidden ${className}`}
     >
-      {[0, 1].map((track) => (
+      {[0, 1].map((i) => (
         <div
-          key={track}
-          className="flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] animate-marquee shrink-0"
+          key={i}
+          className={`flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] ${track} shrink-0`}
         >
-          {[...WORDS, ...WORDS].map((word, i) => (
+          {[...WORDS, ...WORDS].map((word, j) => (
             <p
-              key={i}
+              key={j}
               className="font-bold text-display shrink-0"
               style={{ color }}
             >
@@ -72,12 +74,11 @@ export default function Values() {
       className="relative bg-white w-full overflow-hidden"
     >
       <div className="px-gutter py-section">
-        <div className="marquee relative h-[clamp(48px,8.7vw,125px)]">
-          <Ticker color="#292b2f" className="absolute top-0 left-0 w-full" />
-          <Ticker
-            color="#e9e9e9"
-            className="absolute top-[36%] left-0 w-full"
-          />
+        {/* Stacked in flow rather than absolutely positioned — the rows are
+            as tall as text-display, so overlapping offsets collided. */}
+        <div className="marquee flex flex-col gap-2">
+          <Ticker color="#292b2f" className="w-full" />
+          <Ticker color="#d9d9d9" reverse className="w-full" />
         </div>
 
         <div className="mt-block flex flex-col gap-block">
@@ -89,7 +90,7 @@ export default function Values() {
               <Faceted
                 as="p"
                 density="wide"
-                className="font-bold text-[#4a80f8] text-label shrink-0"
+                className="font-bold text-[#4a80f8] text-lead shrink-0"
               >
                 {v.tag}
               </Faceted>
