@@ -13,6 +13,11 @@ const WORDS = [
   "DISRUPTION",
 ];
 
+/* The lower row starts halfway through the list. Both rows carry the same
+   words, so running them from the same index stacks identical words in
+   columns; rotating one breaks that up since the lengths no longer match. */
+const WORDS_OFFSET = [...WORDS.slice(5), ...WORDS.slice(0, 5)];
+
 const VALUES = [
   {
     num: "1.",
@@ -39,7 +44,7 @@ const VALUES = [
 
 /* Each track holds the word list twice so the -50% marquee loops seamlessly;
    two tracks side by side keep the strip filled at any viewport width. */
-function Ticker({ color, reverse = false, className = "" }) {
+function Ticker({ color, words = WORDS, reverse = false, className = "" }) {
   const track = reverse ? "animate-marquee-reverse" : "animate-marquee";
 
   return (
@@ -52,7 +57,7 @@ function Ticker({ color, reverse = false, className = "" }) {
           key={i}
           className={`flex gap-[clamp(32px,5vw,72px)] pr-[clamp(32px,5vw,72px)] ${track} shrink-0`}
         >
-          {[...WORDS, ...WORDS].map((word, j) => (
+          {[...words, ...words].map((word, j) => (
             <p
               key={j}
               className="font-bold text-display shrink-0"
@@ -76,9 +81,14 @@ export default function Values() {
       <div className="px-gutter py-section">
         {/* Stacked in flow rather than absolutely positioned — the rows are
             as tall as text-display, so overlapping offsets collided. */}
-        <div className="marquee flex flex-col gap-2">
-          <Ticker color="#292b2f" className="w-full" />
-          <Ticker color="#d9d9d9" reverse className="w-full" />
+        <div className="flex flex-col gap-6">
+          <Ticker color="#555962" className="w-full" />
+          <Ticker
+            color="#d9d9d9"
+            words={WORDS_OFFSET}
+            reverse
+            className="w-full"
+          />
         </div>
 
         <div className="mt-block flex flex-col gap-block">

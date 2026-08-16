@@ -92,10 +92,7 @@ body {
   animation: marquee-right 40s linear infinite;
 }
 
-.marquee:hover .animate-marquee,
-.marquee:hover .animate-marquee-reverse {
-  animation-play-state: paused;
-}
+/* No hover pause — the strip runs regardless of the pointer. */
 
 /* ---------- scroll reveal ----------
    Variants share one transition; the hidden state only exists when the
