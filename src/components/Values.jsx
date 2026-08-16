@@ -1,4 +1,4 @@
-import Reveal from "./Reveal";
+import Faceted from "./Faceted";
 
 const WORDS = [
   "BREAKTHROUGH",
@@ -86,37 +86,38 @@ export default function Values() {
               key={v.num}
               className="w-full flex flex-col lg:flex-row items-start justify-between gap-stack"
             >
-              <Reveal
+              <Faceted
                 as="p"
-                variant="reveal-left"
+                density="wide"
                 className="font-bold text-[#4a80f8] text-label shrink-0"
               >
                 {v.tag}
-              </Reveal>
+              </Faceted>
               <div className="flex gap-stack items-start w-full lg:w-auto">
-                <Reveal
+                <Faceted
                   as="p"
-                  variant="reveal-scale"
+                  density="coarse"
                   delay={120}
                   className="font-bold text-[#e9e9e9] text-title shrink-0"
                 >
                   {v.num}
-                </Reveal>
+                </Faceted>
                 <div className="flex flex-col gap-stack min-w-0">
-                  <Reveal
+                  <Faceted
                     as="p"
                     delay={200}
                     className="font-bold text-[#292b2f] text-lead max-w-[688px]"
                   >
                     {v.title}
-                  </Reveal>
-                  <Reveal
+                  </Faceted>
+                  <Faceted
                     as="p"
+                    density="coarse"
                     delay={320}
                     className="font-semibold text-[#555962] text-body"
                   >
                     {v.sub}
-                  </Reveal>
+                  </Faceted>
                 </div>
               </div>
             </div>

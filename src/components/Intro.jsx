@@ -1,5 +1,4 @@
 import Faceted from "./Faceted";
-import Reveal from "./Reveal";
 
 const PHILOSOPHY = [
   ["우리는 현장에서 답을 찾습니다."],
@@ -20,33 +19,39 @@ export default function Intro() {
         </Faceted>
 
         <div className="mt-block flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
-          <Reveal
-            as="p"
-            delay={120}
-            className="font-bold text-[#292b2f] text-lead"
-          >
-            순간을 혁신하는 Development Partner
-            <br />
-            <Reveal
-              as="span"
-              variant="reveal-scale"
-              delay={320}
-              className="inline-block text-[#4a80f8] text-display"
+          <div>
+            <Faceted
+              as="p"
+              delay={120}
+              className="font-bold text-[#292b2f] text-lead"
+            >
+              순간을 혁신하는 Development Partner
+            </Faceted>
+            <Faceted
+              as="p"
+              delay={300}
+              className="font-bold text-[#4a80f8] text-display"
             >
               더모먼트
-            </Reveal>
-          </Reveal>
+            </Faceted>
+          </div>
 
           <div className="font-semibold text-[#555962] text-body max-w-[420px]">
             {PHILOSOPHY.map((block, i) => (
-              <Reveal as="p" key={i} delay={i * 90} className="mb-6 last:mb-0">
+              <Faceted
+                as="p"
+                key={i}
+                density="coarse"
+                delay={i * 90}
+                className="mb-6 last:mb-0"
+              >
                 {block.map((line, j) => (
                   <span key={j}>
                     {line}
                     {j < block.length - 1 && <br />}
                   </span>
                 ))}
-              </Reveal>
+              </Faceted>
             ))}
           </div>
         </div>

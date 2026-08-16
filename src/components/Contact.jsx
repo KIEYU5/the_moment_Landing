@@ -49,15 +49,23 @@ export default function Contact() {
                 delay={i * 120}
                 className="flex flex-col gap-2 w-full"
               >
-                <label
+                <Faceted
+                  as="label"
                   htmlFor={id}
+                  density="wide"
+                  delay={i * 120}
                   className="font-bold text-[#292b2f] text-label"
                 >
                   {field.title}
-                </label>
-                <p className="font-normal text-[#555962] text-caption">
+                </Faceted>
+                <Faceted
+                  as="p"
+                  density="wide"
+                  delay={i * 120 + 80}
+                  className="font-normal text-[#555962] text-caption"
+                >
                   {field.sub}
-                </p>
+                </Faceted>
                 {field.type === "textarea" ? (
                   <textarea
                     id={id}

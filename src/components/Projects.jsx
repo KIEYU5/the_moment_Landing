@@ -60,13 +60,29 @@ export default function Projects() {
               className={`w-full ${p.place} ${p.offset} ${p.height}`}
             >
               <div className={cardClass}>
-                <p className="font-bold text-black text-title transition-colors duration-700 ease-out group-hover:text-[#4a80f8]">
+                <Faceted
+                  as="p"
+                  delay={i * 120 + 80}
+                  className="font-bold text-black text-title"
+                >
                   TITLE
-                </p>
-                <p className="font-bold text-black text-label">{p.label}</p>
-                <p className="font-semibold text-[#555962] text-body">
+                </Faceted>
+                <Faceted
+                  as="p"
+                  density="wide"
+                  delay={i * 120 + 200}
+                  className="font-bold text-black text-label"
+                >
+                  {p.label}
+                </Faceted>
+                <Faceted
+                  as="p"
+                  density="coarse"
+                  delay={i * 120 + 300}
+                  className="font-semibold text-[#555962] text-body"
+                >
                   {p.explain}
-                </p>
+                </Faceted>
               </div>
             </Reveal>
           ))}

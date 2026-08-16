@@ -24,15 +24,31 @@ export default function Awards() {
           {AWARDS.map((a, i) => (
             <Reveal key={i} delay={i * 70}>
               <div className="group border-t border-[#e9e9e9] py-stack grid grid-cols-12 gap-4 items-baseline transition-colors duration-700 ease-out hover:border-[#4a80f8]">
-                <p className="col-span-12 sm:col-span-5 font-bold text-[#292b2f] text-lead transition-transform duration-700 ease-out group-hover:translate-x-2">
-                  {a.title}
-                </p>
-                <p className="col-span-6 sm:col-span-3 font-normal text-[#555962] text-body">
+                <div className="col-span-12 sm:col-span-5 transition-transform duration-700 ease-out group-hover:translate-x-2">
+                  <Faceted
+                    as="p"
+                    delay={i * 70}
+                    className="font-bold text-[#292b2f] text-lead"
+                  >
+                    {a.title}
+                  </Faceted>
+                </div>
+                <Faceted
+                  as="p"
+                  density="wide"
+                  delay={i * 70 + 90}
+                  className="col-span-6 sm:col-span-3 font-normal text-[#555962] text-body"
+                >
                   {a.subtitle}
-                </p>
-                <p className="col-span-6 sm:col-span-4 font-normal text-[#555962] text-body sm:text-right">
+                </Faceted>
+                <Faceted
+                  as="p"
+                  density="wide"
+                  delay={i * 70 + 160}
+                  className="col-span-6 sm:col-span-4 font-normal text-[#555962] text-body sm:text-right"
+                >
                   {a.explain}
-                </p>
+                </Faceted>
               </div>
             </Reveal>
           ))}

@@ -1,3 +1,4 @@
+import Faceted from "./Faceted";
 import Reveal from "./Reveal";
 
 const SOCIAL_LINKS = [
@@ -14,19 +15,37 @@ export default function Footer() {
   return (
     <footer className="relative bg-[#fbfbfb] w-full">
       <div className="px-gutter py-section flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
-        <Reveal>
-          <p className="font-bold text-[#292b2f] text-title">THE MOMENT</p>
-          <p className="font-bold text-[#555962] text-subtitle mt-4">
+        <div>
+          <Faceted as="p" className="font-bold text-[#292b2f] text-title">
+            THE MOMENT
+          </Faceted>
+          <Faceted
+            as="p"
+            density="coarse"
+            delay={140}
+            className="font-bold text-[#555962] text-subtitle mt-4"
+          >
             A development partner innovating the moment.
-          </p>
-          <p className="font-normal text-[#555962] text-caption mt-block">
+          </Faceted>
+          <Faceted
+            as="p"
+            density="wide"
+            delay={280}
+            className="font-normal text-[#555962] text-caption mt-block"
+          >
             © 2026 the_moment. All rights reserved.
-          </p>
-        </Reveal>
+          </Faceted>
+        </div>
 
         <Reveal delay={140} className="flex gap-block">
           <div className="flex flex-col gap-stack">
-            <p className="font-normal text-[#555962] text-caption">SOCIAL</p>
+            <Faceted
+              as="p"
+              density="wide"
+              className="font-normal text-[#555962] text-caption"
+            >
+              SOCIAL
+            </Faceted>
             <div className="flex flex-col gap-stack">
               {SOCIAL_LINKS.map((link, i) => (
                 <a
@@ -43,7 +62,13 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-col gap-stack">
-            <p className="font-normal text-[#555962] text-caption">LEGAL</p>
+            <Faceted
+              as="p"
+              density="wide"
+              className="font-normal text-[#555962] text-caption"
+            >
+              LEGAL
+            </Faceted>
             <div className="flex flex-col gap-stack">
               {LEGAL_LINKS.map((link) => (
                 <a key={link.label} href={link.href} className={linkClass}>

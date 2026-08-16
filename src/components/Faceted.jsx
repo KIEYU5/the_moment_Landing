@@ -11,20 +11,17 @@ import { bleedVertex, buildFacetGrid, rnd } from "../lib/facets";
    the effect can go on a heading, a card, anything block-level.
 
    It renders the content once per shard, so keep it to short runs of text. */
-const COLS = 5;
-const ROWS = 2;
 const BLEED = 0.006;
 
-const SHARDS = buildFacetGrid({ cols: COLS, rows: ROWS, seed: 3 }).map(
-  (facet, k) => {
-    const r1 = rnd(k * 7.3 + 1);
-    const r2 = rnd(k * 3.1 + 5);
-    const r3 = rnd(k * 11.7 + 2);
-    const r4 = rnd(k * 5.5 + 9);
-    const r5 = rnd(k * 17.9 + 4);
-    const r6 = rnd(k * 23.3 + 6);
+function makeShards({ cols, rows, seed }) {
+  return buildFacetGrid({ cols, rows, seed }).map((facet, k) => {
+    const r1 = rnd(k * 7.3 + seed + 1);
+    const r2 = rnd(k * 3.1 + seed + 5);
+    const r3 = rnd(k * 11.7 + seed + 2);
+    const r4 = rnd(k * 5.5 + seed + 9);
+    const r5 = rnd(k * 17.9 + seed + 4);
+    const r6 = rnd(k * 23.3 + seed + 6);
     const away = facet.cx < 0.5 ? -1 : 1;
-
     const pct = (n) => `${(n * 100).toFixed(2)}%`;
 
     return {
@@ -41,24 +38,37 @@ const SHARDS = buildFacetGrid({ cols: COLS, rows: ROWS, seed: 3 }).map(
       duration: 760 + r6 * 380,
       delay: facet.cx * 340 + r1 * 140,
     };
-  },
-);
+  });
+}
+
+/* Density is a cost dial as much as a look. The content is rendered once per
+   shard, so a paragraph split twenty ways is twenty paragraphs — fine for a
+   heading, wasteful for body copy. Displacement is in percentages of the
+   element's own box, so the motion stays proportional at any text size. */
+const GRIDS = {
+  fine: makeShards({ cols: 5, rows: 2, seed: 3 }),
+  coarse: makeShards({ cols: 3, rows: 2, seed: 11 }),
+  wide: makeShards({ cols: 4, rows: 1, seed: 23 }),
+};
 
 export default function Faceted({
   as: Tag = "div",
+  density = "fine",
   delay = 0,
   className = "",
   children,
+  ...rest
 }) {
+  const shards = GRIDS[density] ?? GRIDS.fine;
   const [ref, inView] = useInView();
 
   return (
-    <Tag ref={ref} className={`relative ${className}`}>
+    <Tag ref={ref} className={`relative ${className}`} {...rest}>
       {/* Carries the layout and stays in the accessibility tree; the shards
           are decoration stacked on top of it. */}
       <span className="opacity-0">{children}</span>
 
-      {SHARDS.map((shard, i) => (
+      {shards.map((shard, i) => (
         <span
           key={i}
           aria-hidden
