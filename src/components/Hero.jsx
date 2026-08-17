@@ -34,19 +34,28 @@ const NAV_LINKS = [
    matter how tall the screen is. The brush offsets are the Figma values
    (left 30.5% / top 73.9% / w 15.1% / h 25.8% of a 1440x810 frame)
    re-based onto the wordmark box: pb-[2.19%] below the mark, and a brush that
-   overhangs it by -13.25% on top at 131.4% of its height. */
+   overhangs it by -13.25% on top at 131.4% of its height.
+
+   The whole opening plays once. Everything else on the page rearms when it
+   leaves the screen, but this is the page introducing itself — replaying it
+   on the way back up would read as the site restarting, and the inversion
+   would have to un-invert to do it. So the hero, its navigation and the
+   background all take `once` and the observer stops watching after the
+   first pass. */
+
+/* How far the inverted field runs on below the mark, as a share of the
+   screen. The section is a viewport plus this: the mark still sits on the
+   first screen's bottom edge, and the dark carries past it into the scroll
+   rather than stopping dead on the letterforms. */
+const TAIL = "10dvh";
 
 export default function Hero() {
-  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
+  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px", once: true });
   const [inverted, setInverted] = useState(false);
   const [dots, setDots] = useState(false);
 
   useEffect(() => {
-    if (!inView) {
-      setInverted(false);
-      setDots(false);
-      return undefined;
-    }
+    if (!inView) return undefined;
     const a = setTimeout(() => setInverted(true), HERO.invert);
     const b = setTimeout(() => setDots(true), HERO.dots);
     return () => {
@@ -58,7 +67,8 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className={`hero relative w-full min-h-dvh flex flex-col overflow-hidden${
+      style={{ minHeight: `calc(100dvh + ${TAIL})` }}
+      className={`hero relative w-full flex flex-col overflow-hidden${
         inverted ? " is-inverted" : ""
       }`}
     >
@@ -66,7 +76,7 @@ export default function Hero() {
 
       <nav className="relative shrink-0 flex items-center justify-center gap-[clamp(20px,3.6vw,56px)] whitespace-nowrap pt-5 sm:pt-6">
         {NAV_LINKS.map((link, i) => (
-          <Reveal key={link.label} delay={HERO.nav + i * BEAT}>
+          <Reveal key={link.label} once delay={HERO.nav + i * BEAT}>
             <a
               href={link.href}
               className="text-[var(--hero-ink)] text-[clamp(14px,1.5vw,20px)] font-light transition-colors duration-500 ease-out hover:text-[#4a80f8]"
@@ -79,13 +89,18 @@ export default function Hero() {
 
       <div className="relative mt-auto w-full pb-[2.19%]">
         <div className="relative w-full aspect-[1440/159]">
-          <Wordmark delay={HERO.mark} />
+          <Wordmark once delay={HERO.mark} />
           <Brush
+            once
             delay={HERO.mark}
             className="absolute left-[30.5%] top-[-13.25%] w-[15.1%] h-[131.4%]"
           />
         </div>
       </div>
+
+      {/* The tail. mt-auto above puts the free space over the mark, so this
+          sits under it and holds the mark on the first screen's edge. */}
+      <div aria-hidden className="shrink-0" style={{ height: TAIL }} />
     </section>
   );
 }

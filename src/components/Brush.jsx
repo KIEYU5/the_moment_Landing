@@ -3,8 +3,8 @@ import unionLogo from "../assets/union-logo.svg";
 import useInView from "../hooks/useInView";
 import { STROKES } from "../lib/brush";
 
-export default function Brush({ delay = 0, className = "" }) {
-  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
+export default function Brush({ delay = 0, once = false, className = "" }) {
+  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px", once });
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const maskId = `brush-mask-${uid}`;
   const blurId = `brush-blur-${uid}`;

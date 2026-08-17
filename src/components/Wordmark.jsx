@@ -2,8 +2,8 @@ import { useId } from "react";
 import useInView from "../hooks/useInView";
 import { FACETS, LETTERS } from "../lib/wordmark";
 
-export default function Wordmark({ delay = 0, className = "" }) {
-  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
+export default function Wordmark({ delay = 0, once = false, className = "" }) {
+  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px", once });
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const glyphsId = `wordmark-glyphs-${uid}`;
 

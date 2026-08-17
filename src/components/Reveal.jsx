@@ -5,11 +5,15 @@ export default function Reveal({
   variant = "reveal-up",
   delay = 0,
   threshold,
+  once = false,
   className = "",
   children,
   ...rest
 }) {
-  const [ref, inView] = useInView(threshold === undefined ? {} : { threshold });
+  const [ref, inView] = useInView({
+    once,
+    ...(threshold === undefined ? {} : { threshold }),
+  });
 
   return (
     <Tag
