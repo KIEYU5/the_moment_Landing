@@ -8,6 +8,7 @@ export default function Brush({ delay = 0, once = false, className = "" }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const maskId = `brush-mask-${uid}`;
   const blurId = `brush-blur-${uid}`;
+  const inkId = `brush-ink-${uid}`;
 
   /* The caller sizes and positions the wrapper; the svg only ever fills it.
      Keep those on separate elements -- put w-full next to an arbitrary width
@@ -23,6 +24,24 @@ export default function Brush({ delay = 0, once = false, className = "" }) {
         className="block w-full h-full"
       >
         <defs>
+          {/* The M is an image, so its colour cannot be set by a fill. This
+              floods the ink over it and keeps only where the artwork is
+              opaque, which recolours the stroke while leaving its texture —
+              the grain and the dry-brush gaps — exactly as painted. Reading
+              --hero-ink means it inverts with the rest of the wordmark
+              instead of holding its own colour through the swap. */}
+          <filter
+            id={inkId}
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodColor="var(--hero-ink)" result="ink" />
+            <feComposite in="ink" in2="SourceGraphic" operator="in" />
+          </filter>
+
           <filter
             id={blurId}
             x="-20%"
@@ -72,15 +91,17 @@ export default function Brush({ delay = 0, once = false, className = "" }) {
           </mask>
         </defs>
 
-        <image
-          href={unionLogo}
-          x="0"
-          y="0"
-          width="217.825"
-          height="209.331"
-          preserveAspectRatio="none"
-          mask={`url(#${maskId})`}
-        />
+        <g mask={`url(#${maskId})`}>
+          <image
+            href={unionLogo}
+            x="0"
+            y="0"
+            width="217.825"
+            height="209.331"
+            preserveAspectRatio="none"
+            filter={`url(#${inkId})`}
+          />
+        </g>
       </svg>
     </div>
   );

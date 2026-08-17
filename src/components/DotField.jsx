@@ -16,11 +16,11 @@ import { useEffect, useRef } from "react";
      pointer     dots inside the core are forced to full size regardless of
                  what the turbulence is doing there, and cross from neutral
                  grey to the brand blue.
-     rings       that forced core is a wave source: it sheds a ring on an
-                 interval, which then travels out and thins on its own.
+     rings       coming to a stop sheds a ring from that core, which then
+                 travels out and thins on its own.
 
-   So the field churns on its own, and the pointer both carves a hole in it
-   and leaves a wake. */
+   So the field churns on its own, and moving through it and stopping leaves
+   a wake behind. Nothing rings unprompted. */
 
 const SPACING = 24;
 
@@ -116,32 +116,47 @@ function turbulence(x, y, t) {
 
 /* ---------- rings ---------- */
 
-/* A ring is born at full strength at its origin, travels out at `speed` and
-   thins as it goes. The falloff is squared: that decay is what makes it read
-   as something spreading, rather than as a ring that happens to be moving.
+/* A ring is shed when the pointer comes to rest, and only then — the field
+   is turbulence alone until someone moves through it. It leaves the stopping
+   point at full strength, travels out at RING_SPEED and thins as it goes.
 
-   Two ambient origins keep the idle field from being turbulence alone.
-   Positions are fractions of the field. */
-const PULSES = [
-  { x: 0.32, y: 0.74, period: 9.5, offset: 0, speed: 235, width: 105, amp: 0.62 },
-  { x: 0.79, y: 0.24, period: 13, offset: 5.1, speed: 200, width: 125, amp: 0.5 },
-];
+   The crest is deliberately lopsided. A dot should sit untouched until the
+   front is on it, snap open at once, then subside as the ring carries on to
+   the dots outside it — so the leading side is tight and the trailing side
+   long. Symmetric, a dot swells and shrinks in place over the same span,
+   which reads as breathing rather than as something passing through.
 
-/* And the pointer's own. Emitted on an interval rather than on movement, so
-   resting the cursor still sends rings out instead of going quiet.
-
-   Interval times speed is the gap between one ring and the next, and it has
-   to clear the width or they overlap into a single smooth swell with no
-   ripple in it at all. At 0.78s and 265px/s the gap is 207px against a ring
-   that carries about 92px either side of its crest. */
-const RING_EVERY = 0.78;
-const RING_LIFE = 2.8;
+   gap is the dot's distance minus the front's radius: positive means the
+   front has not reached it yet, negative means it has already gone by. */
+const RING_LEAD = 22;
+const RING_TRAIL = 104;
 const RING_SPEED = 265;
-const RING_WIDTH = 46;
 const RING_AMP = 0.95;
+const RING_MAX = 4;
+/* The front holds its strength while it travels and only gives out at the
+   end of its reach. Decaying from the moment of release — the obvious
+   reading of a wave losing energy — put the crest below the turbulence it
+   was crossing by the time it was 350px out, so there was nothing left to
+   watch travel. HOLD is full strength, LIFE is gone. */
+const RING_HOLD = 1.3;
+const RING_LIFE = 2.6;
+/* Rings drive size directly as well, not only the swell, or the crest can
+   never be bigger than the turbulence already is and there is no snap in it.
+   Just under the pointer's own, so a passing front reads as the same order
+   of event as the pointer itself. */
+const R_RING = 7;
 
-function ringAt(gap, width, fall, amp) {
-  return amp * Math.exp(-(gap * gap) / (2 * width * width)) * fall * fall;
+/* Movement, then stillness. The pointer must have travelled STOP_TRAVEL
+   since the last ring and then held for STOP_AFTER, so a ring answers a
+   gesture ending rather than the cursor merely existing. */
+const STOP_AFTER = 0.11;
+const STOP_TRAVEL = 14;
+
+function ringAt(gap, age) {
+  const width = gap > 0 ? RING_LEAD : RING_TRAIL;
+  const fade =
+    age <= RING_HOLD ? 1 : 1 - (age - RING_HOLD) / (RING_LIFE - RING_HOLD);
+  return Math.exp(-(gap * gap) / (2 * width * width)) * Math.max(0, fade);
 }
 
 /* ---------- pointer ---------- */
@@ -151,10 +166,10 @@ function ringAt(gap, width, fall, amp) {
    which is what makes the pointer read as pushing the field aside rather
    than as tinting it. */
 const REACH = 300;
-const CORE = 74;
-const CORE_EDGE = 168;
-const R_FORCE = 4.4;
-const A_FORCE = 0.9;
+const CORE = 84;
+const CORE_EDGE = 190;
+const R_FORCE = 6.8;
+const A_FORCE = 0.92;
 
 const HALO_FROM = 0.34;
 const HALO_ALPHA = 0.5;
@@ -208,7 +223,13 @@ export default function DotField({ on = false, className = "" }) {
     let dirty = true;
     let raf = 0;
     let rings = [];
-    let lastRing = -Infinity;
+    /* Travel accumulated since the last ring, and when the pointer was last
+       seen moving — together these are what "came to a stop" means. */
+    let travel = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let lastMove = -Infinity;
+    let armed = false;
 
     const size = () => {
       const box = canvas.getBoundingClientRect();
@@ -223,8 +244,15 @@ export default function DotField({ on = false, className = "" }) {
 
     const move = (e) => {
       const box = canvas.getBoundingClientRect();
-      px = e.clientX - box.left;
-      py = e.clientY - box.top;
+      const nx = e.clientX - box.left;
+      const ny = e.clientY - box.top;
+      travel += Math.hypot(nx - lastX, ny - lastY);
+      lastX = nx;
+      lastY = ny;
+      px = nx;
+      py = ny;
+      lastMove = performance.now();
+      if (travel >= STOP_TRAVEL) armed = true;
       wanted = 1;
       dirty = true;
     };
@@ -246,17 +274,17 @@ export default function DotField({ on = false, className = "" }) {
 
           let n = TURB_FLOOR + turbulence(x, y, t) * TURB_SPAN;
 
-          for (const p of PULSES) {
-            const age = (((t - p.offset) % p.period) + p.period) % p.period;
-            const gap = Math.hypot(x - p.x * w, y - p.y * h) - age * p.speed;
-            n += ringAt(gap, p.width, 1 - age / p.period, p.amp);
-          }
-
+          /* Rings take the strongest rather than the sum: two crests
+             crossing should not add up to a dot larger than either front
+             ever makes on its own. */
+          let wake = 0;
           for (const r of rings) {
             const age = t - r.born;
             const gap = Math.hypot(x - r.x, y - r.y) - age * RING_SPEED;
-            n += ringAt(gap, RING_WIDTH, 1 - age / RING_LIFE, RING_AMP * r.at);
+            const e = ringAt(gap, age) * r.at;
+            if (e > wake) wake = e;
           }
+          n += RING_AMP * wake;
 
           const c = Math.min(1, Math.max(0, n));
           const s = c * c * (3 - 2 * c);
@@ -280,8 +308,8 @@ export default function DotField({ on = false, className = "" }) {
              whatever the turbulence was doing there. */
           let r = R_MIN + s * (R_MAX - R_MIN);
           let a = A_MIN + s * (A_MAX - A_MIN);
-          r = Math.max(r, R_FORCE * force);
-          a = Math.max(a, A_FORCE * force);
+          r = Math.max(r, R_RING * wake, R_FORCE * force);
+          a = Math.max(a, A_MAX * wake, A_FORCE * force);
           a += lit * 0.25;
 
           if (lit > HALO_FROM) {
@@ -319,9 +347,13 @@ export default function DotField({ on = false, className = "" }) {
         return;
       }
 
-      if (strength > 0.05 && t - lastRing >= RING_EVERY) {
+      /* The gesture has ended: it travelled far enough to count, and the
+         pointer has now been still long enough to mean it. */
+      if (armed && (now - lastMove) / 1000 >= STOP_AFTER) {
         rings.push({ x: px, y: py, born: t, at: strength });
-        lastRing = t;
+        if (rings.length > RING_MAX) rings.shift();
+        armed = false;
+        travel = 0;
       }
       if (rings.length && t - rings[0].born > RING_LIFE) {
         rings = rings.filter((r) => t - r.born <= RING_LIFE);
