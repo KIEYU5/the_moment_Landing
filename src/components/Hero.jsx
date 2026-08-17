@@ -47,7 +47,7 @@ const NAV_LINKS = [
 const TAIL = "10dvh";
 
 export default function Hero() {
-  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px", once: true });
+  const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
   const [inverted, setInverted] = useState(false);
   const [dots, setDots] = useState(false);
 
@@ -73,7 +73,7 @@ export default function Hero() {
 
       <nav className="relative shrink-0 flex items-center justify-center gap-[clamp(20px,3.6vw,56px)] whitespace-nowrap pt-5 sm:pt-6">
         {NAV_LINKS.map((link, i) => (
-          <Reveal key={link.label} once delay={HERO.nav + i * BEAT}>
+          <Reveal key={link.label} delay={HERO.nav + i * BEAT}>
             <a
               href={link.href}
               className="text-[var(--hero-ink)] text-[clamp(14px,1.5vw,20px)] font-light transition-colors duration-500 ease-out hover:text-[#4a80f8]"
@@ -86,7 +86,7 @@ export default function Hero() {
 
       <div className="relative mt-auto w-full pb-[2.19%]">
         <div className="relative w-full aspect-[1440/159]">
-          <Wordmark once delay={HERO.mark} />
+          <Wordmark delay={HERO.mark} />
         </div>
       </div>
 

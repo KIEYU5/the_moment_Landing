@@ -1,5 +1,6 @@
 import useInView from "../hooks/useInView";
 import { bleedVertex, buildFacetGrid, rnd } from "../lib/facets";
+import { useRevealGroup } from "../lib/revealGroup";
 
 /* The hero wordmark's treatment, generalised so anything on the page can be
    broken the same way. Each shard is a full-size copy of the content clipped
@@ -60,7 +61,11 @@ export default function Faceted({
   ...rest
 }) {
   const shards = GRIDS[density] ?? GRIDS.fine;
-  const [ref, inView] = useInView();
+  /* A group above takes over the cue, and this element's own observer is not
+     attached at all. */
+  const group = useRevealGroup();
+  const [ref, own] = useInView({ enabled: group === null });
+  const inView = group === null ? own : group;
 
   return (
     <Tag ref={ref} className={`relative ${className}`} {...rest}>

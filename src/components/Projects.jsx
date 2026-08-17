@@ -2,6 +2,7 @@ import { useState } from "react";
 import DotField from "./DotField";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
+import RevealGroup from "./RevealGroup";
 import { BEAT, GROUP, beat } from "../lib/timing";
 
 /* Stacked full-width cards, one open at a time. The main project starts
@@ -45,7 +46,7 @@ export default function Projects() {
   return (
     <section id="work" className="relative bg-white w-full overflow-hidden">
       <DotField bare on />
-      <div className="relative px-gutter py-section">
+      <RevealGroup className="relative px-gutter py-section">
         <Faceted
           as="h2"
           className="font-bold text-[#292b2f] text-display mb-block"
@@ -106,7 +107,7 @@ export default function Projects() {
             );
           })}
         </div>
-      </div>
+      </RevealGroup>
     </section>
   );
 }

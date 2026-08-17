@@ -1,6 +1,7 @@
 import DotField from "./DotField";
 import Faceted from "./Faceted";
-import { beat } from "../lib/timing";
+import RevealGroup from "./RevealGroup";
+import { GROUP, beat } from "../lib/timing";
 
 const VALUES = [
   {
@@ -33,9 +34,12 @@ export default function Values() {
       className="relative bg-white w-full overflow-hidden"
     >
       <DotField bare on />
-      <div className="relative px-gutter py-section">
+      <RevealGroup className="relative px-gutter py-section">
         <div className="flex flex-col gap-block">
-          {VALUES.map((v) => (
+          {/* One cue for all three rows, so they need their own offset —
+              without it the rows are identical delays and arrive in perfect
+              unison, which reads as a switch rather than a run. */}
+          {VALUES.map((v, i) => (
             <div
               key={v.num}
               className="w-full flex flex-col lg:flex-row items-start justify-between gap-stack"
@@ -43,6 +47,7 @@ export default function Values() {
               <Faceted
                 as="p"
                 density="wide"
+                delay={beat(0, i * GROUP)}
                 className="font-bold text-[#4a80f8] text-lead shrink-0"
               >
                 {v.tag}
@@ -51,7 +56,7 @@ export default function Values() {
                 <Faceted
                   as="p"
                   density="coarse"
-                  delay={beat(1)}
+                  delay={beat(1, i * GROUP)}
                   className="font-bold text-[#e9e9e9] text-title shrink-0"
                 >
                   {v.num}
@@ -59,7 +64,7 @@ export default function Values() {
                 <div className="flex flex-col gap-stack min-w-0">
                   <Faceted
                     as="p"
-                    delay={beat(2)}
+                    delay={beat(2, i * GROUP)}
                     className="font-bold text-[#292b2f] text-lead max-w-[688px]"
                   >
                     {v.title}
@@ -67,7 +72,7 @@ export default function Values() {
                   <Faceted
                     as="p"
                     density="coarse"
-                    delay={beat(3)}
+                    delay={beat(3, i * GROUP)}
                     className="font-semibold text-[#555962] text-body"
                   >
                     {v.sub}
@@ -77,7 +82,7 @@ export default function Values() {
             </div>
           ))}
         </div>
-      </div>
+      </RevealGroup>
     </section>
   );
 }

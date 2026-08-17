@@ -1,22 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 
-/* threshold stays at 0 on purpose: an element taller than the viewport can
+/* Fires once, the first time the element crosses the trigger line, and then
+   stops observing. Everything on the page is an opening rather than an
+   entrance: replaying a section on the way back up reads as the site
+   restarting, and for the hero the inversion would have to un-invert to do
+   it.
+
+   threshold stays at 0 on purpose: an element taller than the viewport can
    never reach a fractional threshold, so the reveal would never fire. The
    negative bottom margin is what holds the reveal back until the element has
    actually risen into the page.
 
-   `once` is for anything that reads as an opening rather than an entrance:
-   it fires on the first intersection and then stops observing, so scrolling
-   back up finds it already played instead of starting over. */
+   `enabled` is for elements inside a RevealGroup, which take their cue from
+   the group instead — there is no point attaching an observer per element
+   when one is already watching for all of them. */
 export default function useInView({
   threshold = 0,
   rootMargin = "0px 0px -12% 0px",
-  once = false,
+  enabled = true,
 } = {}) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     const node = ref.current;
     if (!node) return;
 
@@ -27,27 +34,16 @@ export default function useInView({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          if (once) observer.disconnect();
-          return;
-        }
-        if (once) return;
-        /* Rearm, but only once the element is properly off screen. The
-           trigger line sits above the viewport's bottom edge, so resetting
-           the moment it stops intersecting would flip the animation on and
-           off while a scroll hovers around that line. The reset itself is
-           instant — see the transition-duration overrides in index.css — so
-           it is never seen running backwards. */
-        const box = entry.boundingClientRect;
-        if (box.bottom < 0 || box.top > window.innerHeight) setInView(false);
+        if (!entry.isIntersecting) return;
+        setInView(true);
+        observer.disconnect();
       },
       { threshold, rootMargin },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [threshold, rootMargin, once]);
+  }, [threshold, rootMargin, enabled]);
 
   return [ref, inView];
 }

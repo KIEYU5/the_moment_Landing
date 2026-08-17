@@ -138,10 +138,9 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* The hidden state doubles as the rearmed state: once a section clears the
-     screen its reveals return here so they play again on the next visit.
-     Zero duration is what keeps that reset from being seen running in
-     reverse — only the entry is ever animated. */
+  /* The starting state, and the only one an element is ever in before its
+     cue. Reveals fire once, so nothing ever transitions back out of it —
+     the zero duration only matters for the first paint. */
   .reveal-up:not(.is-in),
   .reveal-left:not(.is-in),
   .reveal-scale:not(.is-in) {

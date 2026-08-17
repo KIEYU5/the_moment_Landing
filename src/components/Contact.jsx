@@ -2,6 +2,7 @@ import { useState } from "react";
 import DotField from "./DotField";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
+import RevealGroup from "./RevealGroup";
 import { BEAT, GROUP, beat } from "../lib/timing";
 
 const FIELDS = [
@@ -35,7 +36,7 @@ export default function Contact() {
   return (
     <section id="contact" className="relative bg-white w-full overflow-hidden">
       <DotField bare on />
-      <div className="relative px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
+      <RevealGroup className="relative px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
         <Faceted as="h2" className="font-bold text-[#292b2f] text-display">
           Contact <span className="text-[#4a80f8]">Us</span>
         </Faceted>
@@ -114,7 +115,7 @@ export default function Contact() {
             </p>
           </Reveal>
         </form>
-      </div>
+      </RevealGroup>
     </section>
   );
 }
