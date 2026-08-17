@@ -120,36 +120,6 @@ body {
   opacity: 1;
 }
 
-/* ---------- marquee ---------- */
-
-@keyframes marquee-left {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes marquee-right {
-  from {
-    transform: translateX(-50%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.animate-marquee {
-  animation: marquee-left 40s linear infinite;
-}
-
-.animate-marquee-reverse {
-  animation: marquee-right 40s linear infinite;
-}
-
-/* No hover pause — the strip runs regardless of the pointer. */
-
 /* ---------- scroll reveal ----------
    Variants share one transition; the hidden state only exists when the
    visitor has not asked for reduced motion, so content is never trapped
@@ -246,10 +216,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
   :root {
     scroll-behavior: auto;
-  }
-
-  .animate-marquee,
-  .animate-marquee-reverse {
-    animation: none;
   }
 }
