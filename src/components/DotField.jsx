@@ -16,8 +16,8 @@ import { useEffect, useRef } from "react";
      stroke      the pointer paints: moving lays stamps along the path it
                  took, each opening the dots around it to full size and the
                  brand blue, then closing them again.
-     rings       coming to a stop sheds a ring from where it stopped, which
-                 travels out and thins on its own.
+     rings       coming to a stop sheds a ring from where it stopped, in the
+                 same brand blue, which travels out and thins on its own.
 
    Nothing is anchored to where the pointer is, only to where it has been,
    which is what lets the field go quiet on its own: a still hand lays no
@@ -129,9 +129,9 @@ function turbulence(x, y, t) {
 
    gap is the dot's distance minus the front's radius: positive means the
    front has not reached it yet, negative means it has already gone by. */
-const RING_LEAD = 22;
-const RING_TRAIL = 104;
-const RING_SPEED = 265;
+const RING_LEAD = 26;
+const RING_TRAIL = 120;
+const RING_SPEED = 390;
 const RING_AMP = 0.95;
 const RING_MAX = 4;
 /* The front holds its strength while it travels and only gives out at the
@@ -143,9 +143,9 @@ const RING_HOLD = 1.3;
 const RING_LIFE = 2.6;
 /* Rings drive size directly as well, not only the swell, or the crest can
    never be bigger than the turbulence already is and there is no snap in it.
-   Just under the pointer's own, so a passing front reads as the same order
-   of event as the pointer itself. */
-const R_RING = 7;
+   Above the stroke's own: the front is the larger event, and it is the only
+   thing left once the hand has stopped. */
+const R_RING = 8.4;
 
 /* Movement, then stillness. The pointer must have travelled STOP_TRAVEL
    since the last ring and then held for STOP_AFTER, so a ring answers a
@@ -175,7 +175,7 @@ function ringAt(gap, age) {
    Stamps are laid every TRAIL_STEP px of travel rather than per event, so
    the stroke has the same density whether the hand is fast or slow. */
 const TRAIL_STEP = 7;
-const TRAIL_RADIUS = 78;
+const TRAIL_RADIUS = 92;
 const TRAIL_LIFE = 0.5;
 /* Open quickly, close slowly. Without the attack a dot is simply at full
    size the instant the stamp lands, which reads as switching on rather than
@@ -371,16 +371,18 @@ export default function DotField({ on = false, className = "" }) {
           const c = Math.min(1, Math.max(0, n));
           const s = c * c * (3 - 2 * c);
 
-          /* The stroke is the only thing that colours a dot, so the blue
-             exists exactly as long as the paint does. */
-          const lit = paint[row * stride + col];
+          /* Both the stroke and the front carry the brand colour, and they
+             are the only two things that do — everything else in the field
+             stays the neutral grey. */
+          const stroke = paint[row * stride + col];
+          const lit = stroke > wake ? stroke : wake;
 
-          /* Override, not addition: under the stroke a dot is this size
+          /* Override, not addition: under either of them a dot is this size
              whatever the turbulence was doing there. */
           let r = R_MIN + s * (R_MAX - R_MIN);
           let a = A_MIN + s * (A_MAX - A_MIN);
-          r = Math.max(r, R_RING * wake, R_TRAIL * lit);
-          a = Math.max(a, A_MAX * wake, A_TRAIL * lit);
+          r = Math.max(r, R_RING * wake, R_TRAIL * stroke);
+          a = Math.max(a, A_TRAIL * lit);
 
           if (lit > HALO_FROM) {
             const g = (lit - HALO_FROM) / (1 - HALO_FROM);

@@ -23,6 +23,12 @@ export const LETTERS = [
   "M1313.21 28.6371V2.1371H1440V28.6371H1392.53V156.863H1360.68V28.6371H1313.21Z",
 ];
 
+/* The first M carries the brand colour while the rest of the word takes the
+   hero ink, so the letter the mark is built on stays picked out through the
+   inversion instead of turning over with everything else. Index into LETTERS
+   above. */
+export const BRAND_LETTER = 3;
+
 /* Horizontal extent of each glyph above, so a facet can draw only the letters
    that can reach it. All nine span the full band height, so x is enough. */
 const LETTER_X = [

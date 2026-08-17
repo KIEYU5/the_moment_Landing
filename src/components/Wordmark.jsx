@@ -1,6 +1,6 @@
 import { useId } from "react";
 import useInView from "../hooks/useInView";
-import { FACETS, LETTERS } from "../lib/wordmark";
+import { BRAND_LETTER, FACETS, LETTERS } from "../lib/wordmark";
 
 export default function Wordmark({ delay = 0, once = false, className = "" }) {
   const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px", once });
@@ -25,7 +25,7 @@ export default function Wordmark({ delay = 0, once = false, className = "" }) {
             key={i}
             id={`${glyphsId}-g${i}`}
             d={d}
-            fill="var(--hero-ink)"
+            fill={i === BRAND_LETTER ? "#4a80f8" : "var(--hero-ink)"}
           />
         ))}
 
