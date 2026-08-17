@@ -129,18 +129,23 @@ function turbulence(x, y, t) {
 
    gap is the dot's distance minus the front's radius: positive means the
    front has not reached it yet, negative means it has already gone by. */
-const RING_LEAD = 26;
-const RING_TRAIL = 120;
-const RING_SPEED = 390;
+const RING_LEAD = 20;
+const RING_TRAIL = 92;
+const RING_SPEED = 520;
 const RING_AMP = 0.95;
 const RING_MAX = 4;
 /* The front holds its strength while it travels and only gives out at the
    end of its reach. Decaying from the moment of release — the obvious
    reading of a wave losing energy — put the crest below the turbulence it
    was crossing by the time it was 350px out, so there was nothing left to
-   watch travel. HOLD is full strength, LIFE is gone. */
-const RING_HOLD = 1.3;
-const RING_LIFE = 2.6;
+   watch travel. HOLD is full strength, LIFE is gone.
+
+   Both are shorter than they were because the front is faster: at 520px/s
+   it clears a 1280px screen from the middle in well under two seconds, and
+   holding it alive past that is per-dot work spent on a ring nobody can
+   see. */
+const RING_HOLD = 1.2;
+const RING_LIFE = 2.2;
 /* Rings drive size directly as well, not only the swell, or the crest can
    never be bigger than the turbulence already is and there is no snap in it.
    Above the stroke's own: the front is the larger event, and it is the only
