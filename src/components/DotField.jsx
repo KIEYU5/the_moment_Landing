@@ -13,17 +13,15 @@ import { useEffect, useRef } from "react";
                  its fine irregular grain. Crossed sine waves cannot do this
                  — they interfere on a lattice you can read, and the result
                  reads as a pattern rather than as movement.
-     pointer     dots inside the core are forced to full size regardless of
-                 what the turbulence is doing there, on a boundary that
-                 swells and subsides rather than holding a fixed disc.
-     colour      dots cross from neutral grey to the brand blue, but only
-                 while the pointer is actually moving.
-     rings       coming to a stop sheds a ring from that core, which then
+     stroke      the pointer paints: moving lays stamps along the path it
+                 took, each opening the dots around it to full size and the
+                 brand blue, then closing them again.
+     rings       coming to a stop sheds a ring from where it stopped, which
                  travels out and thins on its own.
 
-   The split is the point: size answers where the pointer is, colour answers
-   whether it is moving, and rings answer where it stopped. Nothing happens
-   unprompted except the turbulence itself. */
+   Nothing is anchored to where the pointer is, only to where it has been,
+   which is what lets the field go quiet on its own: a still hand lays no
+   stamps, the last ones run out, and the turbulence is all that is left. */
 
 const SPACING = 24;
 
@@ -162,32 +160,36 @@ function ringAt(gap, age) {
   return Math.exp(-(gap * gap) / (2 * width * width)) * Math.max(0, fade);
 }
 
-/* ---------- pointer ---------- */
+/* ---------- the stroke ---------- */
 
-/* REACH is the colour pool. CORE and CORE_EDGE are the size override: inside
-   the core a dot is forced to full size whatever the turbulence says there,
-   which is what makes the pointer read as pushing the field aside rather
-   than as tinting it. */
-const REACH = 300;
-const CORE = 84;
-const CORE_EDGE = 190;
-const R_FORCE = 6.8;
-const A_FORCE = 0.92;
+/* The pointer paints. Moving lays down a run of stamps along the path it
+   actually took, each of which opens the dots around it and then closes
+   them again — so what you see is a brush stroke drawn through the field,
+   trailing off behind the cursor.
 
-/* The override breathes rather than holding a fixed disc. The boundary
-   sweeping out and back is the same event as a ring passing, just tethered
-   to the pointer instead of leaving it, so a resting cursor still reads as
-   something happening rather than as a blob parked on the field. */
-const CORE_PERIOD = 2.6;
-const CORE_SWING = 0.42;
-const TAU = Math.PI * 2;
+   Nothing here is anchored to where the pointer is, only to where it has
+   been. A disc centred on the cursor keeps animating while the hand is
+   still; a trail of stamps runs out on its own, and a still pointer lays no
+   new ones, so the field goes quiet by itself.
 
-/* Colour answers movement, not presence. Rising quickly and falling slowly
-   is what keeps it from strobing on a jittery hand while still draining
-   away once the pointer is genuinely still. */
-const MOVE_HOLD = 0.09;
-const MOVE_RISE = 0.3;
-const MOVE_FALL = 0.055;
+   Stamps are laid every TRAIL_STEP px of travel rather than per event, so
+   the stroke has the same density whether the hand is fast or slow. */
+const TRAIL_STEP = 7;
+const TRAIL_RADIUS = 78;
+const TRAIL_LIFE = 0.5;
+/* Open quickly, close slowly. Without the attack a dot is simply at full
+   size the instant the stamp lands, which reads as switching on rather than
+   as being painted over. */
+const TRAIL_ATTACK = 0.09;
+const R_TRAIL = 6.8;
+const A_TRAIL = 0.92;
+
+function bristle(age) {
+  if (age < 0 || age >= TRAIL_LIFE) return 0;
+  if (age < TRAIL_ATTACK) return age / TRAIL_ATTACK;
+  const k = (age - TRAIL_ATTACK) / (TRAIL_LIFE - TRAIL_ATTACK);
+  return (1 - k) * (1 - k);
+}
 
 const HALO_FROM = 0.34;
 const HALO_ALPHA = 0.5;
@@ -230,23 +232,34 @@ export default function DotField({ on = false, className = "" }) {
     const halo = makeHalo();
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    const start = performance.now();
+    const clock = () => (performance.now() - start) / 1000;
+
     let w = 0;
     let h = 0;
     let px = 0;
     let py = 0;
-    /* Ramped rather than switched, so the pool arrives with the pointer
-       instead of snapping on at the first move event. */
-    let strength = 0;
-    let wanted = 0;
-    let moving = 0;
+    let cols = 0;
+    let rows = 0;
+    let stride = 0;
+    let half = 0;
+    /* How much stroke is on each lattice point this frame. Splatting the
+       stamps into a grid the size of the lattice and reading one cell per
+       dot costs a fraction of testing every dot against every stamp — a
+       quick drag can have seventy stamps alive at once against eighteen
+       hundred dots. */
+    let paint = new Float32Array(0);
     let dirty = true;
     let raf = 0;
     let rings = [];
-    /* Travel accumulated since the last ring, and when the pointer was last
-       seen moving — together these are what "came to a stop" means. */
+    let trail = [];
+    /* Travel accumulated since the last ring, where the last stamp landed,
+       and when the pointer was last seen — together these are what "came to
+       a stop" means. */
     let travel = 0;
     let lastX = 0;
     let lastY = 0;
+    let seeded = false;
     let lastMove = -Infinity;
     let armed = false;
 
@@ -258,6 +271,11 @@ export default function DotField({ on = false, className = "" }) {
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Math.ceil(w / SPACING);
+      rows = Math.ceil(h / SPACING);
+      stride = cols + 1;
+      half = (w - (cols - 1) * SPACING) / 2;
+      paint = new Float32Array(stride * (rows + 1));
       dirty = true;
     };
 
@@ -265,35 +283,71 @@ export default function DotField({ on = false, className = "" }) {
       const box = canvas.getBoundingClientRect();
       const nx = e.clientX - box.left;
       const ny = e.clientY - box.top;
-      travel += Math.hypot(nx - lastX, ny - lastY);
-      lastX = nx;
-      lastY = ny;
       px = nx;
       py = ny;
       lastMove = performance.now();
+
+      if (!seeded) {
+        lastX = nx;
+        lastY = ny;
+        seeded = true;
+        return;
+      }
+
+      const step = Math.hypot(nx - lastX, ny - lastY);
+      travel += step;
       if (travel >= STOP_TRAVEL) armed = true;
-      wanted = 1;
+
+      /* Stamp along the segment, not at the event. Pointer events arrive far
+         apart during a fast flick, and stamping only where they land leaves
+         a dotted line of separate blobs instead of a stroke. */
+      if (step >= TRAIL_STEP && !still) {
+        const steps = Math.min(32, Math.round(step / TRAIL_STEP));
+        const born = clock();
+        for (let i = 1; i <= steps; i++) {
+          const k = i / steps;
+          trail.push({
+            x: lastX + (nx - lastX) * k,
+            y: lastY + (ny - lastY) * k,
+            born,
+          });
+        }
+        lastX = nx;
+        lastY = ny;
+      }
       dirty = true;
     };
 
-    const leave = (e) => {
-      if (!e.relatedTarget) wanted = 0;
+    /* Lay the live stamps onto the lattice grid. Each takes the strongest
+       rather than the sum, so overlapping stamps along one stroke give an
+       even band instead of a bright seam wherever the hand slowed down. */
+    const layStroke = (t) => {
+      paint.fill(0);
+      for (const s of trail) {
+        const env = bristle(t - s.born);
+        if (env <= 0) continue;
+        const c0 = Math.max(0, Math.floor((s.x - TRAIL_RADIUS - half) / SPACING));
+        const c1 = Math.min(cols, Math.ceil((s.x + TRAIL_RADIUS - half) / SPACING));
+        const r0 = Math.max(0, Math.floor((s.y - TRAIL_RADIUS) / SPACING));
+        const r1 = Math.min(rows, Math.ceil((s.y + TRAIL_RADIUS) / SPACING));
+        for (let row = r0; row <= r1; row++) {
+          const dy = row * SPACING - s.y;
+          for (let col = c0; col <= c1; col++) {
+            const dx = half + col * SPACING - s.x;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d >= TRAIL_RADIUS) continue;
+            const f = 1 - d / TRAIL_RADIUS;
+            const e = f * f * (3 - 2 * f) * env;
+            const i = row * stride + col;
+            if (e > paint[i]) paint[i] = e;
+          }
+        }
+      }
     };
 
     const draw = (t) => {
       ctx.clearRect(0, 0, w, h);
-      const cols = Math.ceil(w / SPACING);
-      const rows = Math.ceil(h / SPACING);
-      const half = (w - (cols - 1) * SPACING) / 2;
-
-      /* One cosine for the whole frame: the override's reach swells and
-         subsides, and the size it forces goes with it. */
-      const breath =
-        0.5 - 0.5 * Math.cos((TAU * t) / CORE_PERIOD);
-      const swell = 1 - CORE_SWING + CORE_SWING * breath;
-      const coreIn = CORE * swell;
-      const coreOut = CORE_EDGE * swell;
-      const forceR = R_FORCE * (0.8 + 0.2 * breath);
+      layStroke(t);
 
       for (let row = 0; row <= rows; row++) {
         const y = row * SPACING;
@@ -317,28 +371,16 @@ export default function DotField({ on = false, className = "" }) {
           const c = Math.min(1, Math.max(0, n));
           const s = c * c * (3 - 2 * c);
 
-          let lit = 0;
-          let force = 0;
-          if (strength > 0.001) {
-            const d = Math.hypot(px - x, py - y);
-            if (d < REACH && moving > 0.002) {
-              const f = 1 - d / REACH;
-              lit = f * f * strength * moving;
-            }
-            if (d < coreOut) {
-              const f =
-                d <= coreIn ? 1 : 1 - (d - coreIn) / (coreOut - coreIn);
-              force = f * f * (3 - 2 * f) * strength;
-            }
-          }
+          /* The stroke is the only thing that colours a dot, so the blue
+             exists exactly as long as the paint does. */
+          const lit = paint[row * stride + col];
 
-          /* Override, not addition: inside the core the dot is this size
+          /* Override, not addition: under the stroke a dot is this size
              whatever the turbulence was doing there. */
           let r = R_MIN + s * (R_MAX - R_MIN);
           let a = A_MIN + s * (A_MAX - A_MIN);
-          r = Math.max(r, R_RING * wake, forceR * force);
-          a = Math.max(a, A_MAX * wake, A_FORCE * force);
-          a += lit * 0.25;
+          r = Math.max(r, R_RING * wake, R_TRAIL * lit);
+          a = Math.max(a, A_MAX * wake, A_TRAIL * lit);
 
           if (lit > HALO_FROM) {
             const g = (lit - HALO_FROM) / (1 - HALO_FROM);
@@ -359,20 +401,15 @@ export default function DotField({ on = false, className = "" }) {
       ctx.globalAlpha = 1;
     };
 
-    const start = performance.now();
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
-      strength += (wanted - strength) * 0.08;
-      const stirring = (now - lastMove) / 1000 < MOVE_HOLD ? 1 : 0;
-      moving += (stirring - moving) * (stirring ? MOVE_RISE : MOVE_FALL);
       const t = (now - start) / 1000;
 
-      /* Reduced motion keeps the pointer — that is the visitor's own
-         movement — but holds the turbulence still, sheds no rings, and only
-         repaints when the pointer has asked for it. */
+      /* Reduced motion holds the turbulence still, lays no stroke and sheds
+         no rings, so the field is a static lattice and only repaints when
+         it has been resized. */
       if (still) {
-        if (!dirty && Math.abs(wanted - strength) < 0.002 && moving < 0.002)
-          return;
+        if (!dirty) return;
         dirty = false;
         draw(0);
         return;
@@ -381,13 +418,16 @@ export default function DotField({ on = false, className = "" }) {
       /* The gesture has ended: it travelled far enough to count, and the
          pointer has now been still long enough to mean it. */
       if (armed && (now - lastMove) / 1000 >= STOP_AFTER) {
-        rings.push({ x: px, y: py, born: t, at: strength });
+        rings.push({ x: px, y: py, born: t, at: 1 });
         if (rings.length > RING_MAX) rings.shift();
         armed = false;
         travel = 0;
       }
       if (rings.length && t - rings[0].born > RING_LIFE) {
         rings = rings.filter((r) => t - r.born <= RING_LIFE);
+      }
+      if (trail.length && t - trail[0].born > TRAIL_LIFE) {
+        trail = trail.filter((s) => t - s.born <= TRAIL_LIFE);
       }
 
       draw(t);
@@ -399,13 +439,11 @@ export default function DotField({ on = false, className = "" }) {
     const observer = new ResizeObserver(size);
     observer.observe(canvas);
     window.addEventListener("pointermove", move, { passive: true });
-    document.addEventListener("pointerout", leave, { passive: true });
 
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
       window.removeEventListener("pointermove", move);
-      document.removeEventListener("pointerout", leave);
     };
   }, [on]);
 
