@@ -14,13 +14,16 @@ import { useEffect, useRef } from "react";
                  — they interfere on a lattice you can read, and the result
                  reads as a pattern rather than as movement.
      pointer     dots inside the core are forced to full size regardless of
-                 what the turbulence is doing there, and cross from neutral
-                 grey to the brand blue.
+                 what the turbulence is doing there, on a boundary that
+                 swells and subsides rather than holding a fixed disc.
+     colour      dots cross from neutral grey to the brand blue, but only
+                 while the pointer is actually moving.
      rings       coming to a stop sheds a ring from that core, which then
                  travels out and thins on its own.
 
-   So the field churns on its own, and moving through it and stopping leaves
-   a wake behind. Nothing rings unprompted. */
+   The split is the point: size answers where the pointer is, colour answers
+   whether it is moving, and rings answer where it stopped. Nothing happens
+   unprompted except the turbulence itself. */
 
 const SPACING = 24;
 
@@ -171,6 +174,21 @@ const CORE_EDGE = 190;
 const R_FORCE = 6.8;
 const A_FORCE = 0.92;
 
+/* The override breathes rather than holding a fixed disc. The boundary
+   sweeping out and back is the same event as a ring passing, just tethered
+   to the pointer instead of leaving it, so a resting cursor still reads as
+   something happening rather than as a blob parked on the field. */
+const CORE_PERIOD = 2.6;
+const CORE_SWING = 0.42;
+const TAU = Math.PI * 2;
+
+/* Colour answers movement, not presence. Rising quickly and falling slowly
+   is what keeps it from strobing on a jittery hand while still draining
+   away once the pointer is genuinely still. */
+const MOVE_HOLD = 0.09;
+const MOVE_RISE = 0.3;
+const MOVE_FALL = 0.055;
+
 const HALO_FROM = 0.34;
 const HALO_ALPHA = 0.5;
 const HALO_SIZE = 32;
@@ -220,6 +238,7 @@ export default function DotField({ on = false, className = "" }) {
        instead of snapping on at the first move event. */
     let strength = 0;
     let wanted = 0;
+    let moving = 0;
     let dirty = true;
     let raf = 0;
     let rings = [];
@@ -267,6 +286,15 @@ export default function DotField({ on = false, className = "" }) {
       const rows = Math.ceil(h / SPACING);
       const half = (w - (cols - 1) * SPACING) / 2;
 
+      /* One cosine for the whole frame: the override's reach swells and
+         subsides, and the size it forces goes with it. */
+      const breath =
+        0.5 - 0.5 * Math.cos((TAU * t) / CORE_PERIOD);
+      const swell = 1 - CORE_SWING + CORE_SWING * breath;
+      const coreIn = CORE * swell;
+      const coreOut = CORE_EDGE * swell;
+      const forceR = R_FORCE * (0.8 + 0.2 * breath);
+
       for (let row = 0; row <= rows; row++) {
         const y = row * SPACING;
         for (let col = 0; col <= cols; col++) {
@@ -293,13 +321,13 @@ export default function DotField({ on = false, className = "" }) {
           let force = 0;
           if (strength > 0.001) {
             const d = Math.hypot(px - x, py - y);
-            if (d < REACH) {
+            if (d < REACH && moving > 0.002) {
               const f = 1 - d / REACH;
-              lit = f * f * strength;
+              lit = f * f * strength * moving;
             }
-            if (d < CORE_EDGE) {
+            if (d < coreOut) {
               const f =
-                d <= CORE ? 1 : 1 - (d - CORE) / (CORE_EDGE - CORE);
+                d <= coreIn ? 1 : 1 - (d - coreIn) / (coreOut - coreIn);
               force = f * f * (3 - 2 * f) * strength;
             }
           }
@@ -308,7 +336,7 @@ export default function DotField({ on = false, className = "" }) {
              whatever the turbulence was doing there. */
           let r = R_MIN + s * (R_MAX - R_MIN);
           let a = A_MIN + s * (A_MAX - A_MIN);
-          r = Math.max(r, R_RING * wake, R_FORCE * force);
+          r = Math.max(r, R_RING * wake, forceR * force);
           a = Math.max(a, A_MAX * wake, A_FORCE * force);
           a += lit * 0.25;
 
@@ -335,13 +363,16 @@ export default function DotField({ on = false, className = "" }) {
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
       strength += (wanted - strength) * 0.08;
+      const stirring = (now - lastMove) / 1000 < MOVE_HOLD ? 1 : 0;
+      moving += (stirring - moving) * (stirring ? MOVE_RISE : MOVE_FALL);
       const t = (now - start) / 1000;
 
       /* Reduced motion keeps the pointer — that is the visitor's own
          movement — but holds the turbulence still, sheds no rings, and only
          repaints when the pointer has asked for it. */
       if (still) {
-        if (!dirty && Math.abs(wanted - strength) < 0.002) return;
+        if (!dirty && Math.abs(wanted - strength) < 0.002 && moving < 0.002)
+          return;
         dirty = false;
         draw(0);
         return;

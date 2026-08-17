@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Brush from "./Brush";
 import DotField from "./DotField";
 import Reveal from "./Reveal";
 import Wordmark from "./Wordmark";
@@ -31,10 +30,8 @@ const NAV_LINKS = [
 
    Everything around it is expressed as a percentage of width, which is what
    padding percentages resolve against, so the whole group scales as one no
-   matter how tall the screen is. The brush offsets are the Figma values
-   (left 30.5% / top 73.9% / w 15.1% / h 25.8% of a 1440x810 frame)
-   re-based onto the wordmark box: pb-[2.19%] below the mark, and a brush that
-   overhangs it by -13.25% on top at 131.4% of its height.
+   matter how tall the screen is; pb-[2.19%] is the Figma gap below the mark
+   re-based onto the wordmark box.
 
    The whole opening plays once. Everything else on the page rearms when it
    leaves the screen, but this is the page introducing itself — replaying it
@@ -90,11 +87,6 @@ export default function Hero() {
       <div className="relative mt-auto w-full pb-[2.19%]">
         <div className="relative w-full aspect-[1440/159]">
           <Wordmark once delay={HERO.mark} />
-          <Brush
-            once
-            delay={HERO.mark}
-            className="absolute left-[30.5%] top-[-13.25%] w-[15.1%] h-[131.4%]"
-          />
         </div>
       </div>
 

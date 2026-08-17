@@ -3,13 +3,19 @@ import { bleedVertex, buildFacetGrid, rnd } from "./facets";
 /* Geometry only — kept out of the component so the timing module can ask
    how long the wordmark takes without a component file exporting things
    that are not components. */
-/* "THE MOMENT" minus the M — the M is the blue brush stroke drawn by the
-   Union logo, which sits in the gap between "THE" and "OMENT". Paths are
-   inlined rather than loaded as an <img> so the wordmark can be cut up. */
+/* "THE MOMENT". Paths are inlined rather than loaded as an <img> so the
+   wordmark can be cut up.
+
+   The word's first M used to be a brush stroke lifted from the old logo,
+   sitting in the gap between "THE" and "OMENT". It is now the same letter as
+   the second M: the second M's own path, moved -358.127 along x so that it
+   leaves the O the same 23.091 gap the O leaves the other M. Moving the path
+   rather than transcribing one is what makes the two provably identical. */
 export const LETTERS = [
   "M0 28.6371V2.1371H126.788V28.6371H79.3229V156.863H47.4655V28.6371H0Z",
   "M146.673 156.863V2.1371H178.744V66.25H245.88V2.1371H278.165V156.863H245.88V92.75H178.744V156.863H146.673Z",
   "M304.249 156.863V2.1371H408.16V28.6371H336.321V66.25H402.815V92.75H336.321V130.363H408.374V156.863H304.249Z",
+  "M483.637 2.1371H523.405L566.381 107.069H568.091L611.067 2.1371H650.833V156.863H619.619V55.5645H618.336L577.926 156.222H556.546L516.136 55.1371H514.853V156.863H483.637V2.1371Z",
   "M818.673 79.5C818.673 129.935 787.243 159 746.405 159C705.14 159 673.924 129.722 673.924 79.5C673.924 29.0645 705.14 0 746.405 0C787.243 0 818.673 29.0645 818.673 79.5ZM785.96 79.5C785.96 46.375 770.352 28.4234 746.405 28.4234C722.459 28.4234 706.637 46.375 706.637 79.5C706.637 112.625 722.459 130.577 746.405 130.577C770.352 130.577 785.96 112.625 785.96 79.5Z",
   "M841.764 2.1371H881.532L924.508 107.069H926.218L969.194 2.1371H1008.96V156.863H977.746V55.5645H976.463L936.053 156.222H914.673L874.263 55.1371H872.98V156.863H841.764V2.1371Z",
   "M1035.05 156.863V2.1371H1138.96V28.6371H1067.12V66.25H1133.61V92.75H1067.12V130.363H1139.17V156.863H1035.05Z",
@@ -18,11 +24,12 @@ export const LETTERS = [
 ];
 
 /* Horizontal extent of each glyph above, so a facet can draw only the letters
-   that can reach it. All eight span the full band height, so x is enough. */
+   that can reach it. All nine span the full band height, so x is enough. */
 const LETTER_X = [
   [0, 126.8],
   [146.7, 278.2],
   [304.2, 408.4],
+  [483.6, 650.9],
   [673.9, 818.7],
   [841.8, 1009.0],
   [1035.1, 1139.2],
@@ -44,8 +51,9 @@ const BAND_H = 199;
 const COLS = 12;
 const ROWS = 3;
 
-/* The M is the facet everything else resolves outward from. */
-const M_CENTRE = 541;
+/* The first M is the facet everything else resolves outward from — the
+   centre of the glyph above, 483.637 to 650.833. */
+const M_CENTRE = 567;
 /* The cascade, not the travel: this is how long the last facet waits before
    it starts, so it sets the wordmark's total length and everything the hero
    queues behind it. Shortened to bring the colour swap forward without making

@@ -1,4 +1,3 @@
-import { BRUSH_RUNS } from "./brush";
 import { WORDMARK_RUNS } from "./wordmark";
 
 /* One clock for the whole page. Sections used to invent their own numbers —
@@ -23,15 +22,14 @@ export const DOTS_RUNS = 700;
 /* The hero is a chain, and every length in it is asked of whatever owns that
    length rather than estimated.
 
-   The opening is one phase, not three: the M is painted, the wordmark gathers
-   out of its facets and the navigation arrives, all on the same cue. Holding
-   the nav back until the mark had settled was costing 1.2s before the colour
-   swap could even begin.
+   The opening is one phase, not two: the wordmark gathers out of its facets
+   and the navigation arrives on the same cue. Holding the nav back until the
+   mark had settled was costing 1.2s before the colour swap could even begin.
 
    The swap then waits on whichever of the two is still going. */
 const MARK_AT = 140;
 const NAV_AT = MARK_AT;
-const MARK_RUNS = Math.max(BRUSH_RUNS, WORDMARK_RUNS);
+const MARK_RUNS = WORDMARK_RUNS;
 const NAV_RUNS = 3 * BEAT + REVEAL_RUNS; // last link's stagger plus its travel
 const INVERT_AT = Math.max(MARK_AT + MARK_RUNS, NAV_AT + NAV_RUNS);
 const DOTS_AT = INVERT_AT + INVERT_RUNS;

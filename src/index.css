@@ -243,22 +243,6 @@ body {
   }
 }
 
-/* ---------- painted brush stroke (Hero M) ----------
-   The mask paths are drawn on with stroke-dashoffset over a normalised
-   pathLength of 1, so each gesture appears the way it was painted. */
-
-.brush-stroke {
-  stroke-dashoffset: 0;
-  transition-property: stroke-dashoffset;
-  transition-timing-function: cubic-bezier(0.42, 0.04, 0.22, 1);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .brush-stroke:not(.is-in) {
-    stroke-dashoffset: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   :root {
     scroll-behavior: auto;
