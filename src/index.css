@@ -1,11 +1,7 @@
 @import "tailwindcss";
 
-/* Type scale by role. Sections used about twenty ad-hoc sizes for what turned
-   out to be seven jobs; these replace them so a heading is the same heading
-   wherever it appears. The Hero is deliberately outside this — its wordmark
-   is artwork, not type. Weight and colour stay on the element, since the same
-   role is set in ink or grey depending on the section. */
-/* Spacing by role, for the same reason as the type scale. Section padding was
+/* Spacing by role, the same treatment the type scale below gets. Section
+   padding was
    96 / 120 / 160 depending on the section and headings sat 76, 140 or 186
    above their content, which is what made the page read as unrelated blocks.
    Gutters stay tight and the vertical rhythm runs long, so the page fills its
@@ -17,6 +13,11 @@
   --spacing-stack: clamp(20px, 2.2vw, 40px);
 }
 
+/* Type scale by role. Sections used about twenty ad-hoc sizes for what turned
+   out to be seven jobs; these replace them so a heading is the same heading
+   wherever it appears. The Hero is deliberately outside this — its wordmark
+   is artwork, not type. Weight and colour stay on the element, since the same
+   role is set in ink or grey depending on the section. */
 @theme {
   --text-display: clamp(28px, 4.4vw, 64px);
   --text-display--line-height: 1.1;
@@ -161,74 +162,6 @@ body {
     transition-duration: 0s;
     transform: translate(var(--fx), var(--fy)) rotate(var(--fr))
       skewX(var(--fk)) scale(var(--fs));
-  }
-}
-
-/* ---------- neon ----------
-   Layered drop-shadows rather than a blur: drop-shadow works off the alpha
-   channel, so the halo takes the shape of the mark instead of a soft box,
-   and the mark itself stays crisp on top of its own light. */
-
-.neon {
-  filter: drop-shadow(0 0 2px rgba(74, 128, 248, 0.95))
-    drop-shadow(0 0 8px rgba(74, 128, 248, 0.7))
-    drop-shadow(0 0 22px rgba(74, 128, 248, 0.45))
-    drop-shadow(0 0 48px rgba(74, 128, 248, 0.25));
-}
-
-@keyframes neon-strike {
-  0%,
-  8% {
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  16% {
-    opacity: 0.25;
-  }
-  22% {
-    opacity: 1;
-  }
-  27% {
-    opacity: 0.4;
-  }
-  34% {
-    opacity: 1;
-  }
-  38% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes neon-breathe {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 2px rgba(74, 128, 248, 0.95))
-      drop-shadow(0 0 8px rgba(74, 128, 248, 0.7))
-      drop-shadow(0 0 22px rgba(74, 128, 248, 0.45))
-      drop-shadow(0 0 48px rgba(74, 128, 248, 0.25));
-  }
-  50% {
-    filter: drop-shadow(0 0 2px rgba(74, 128, 248, 0.8))
-      drop-shadow(0 0 12px rgba(74, 128, 248, 0.55))
-      drop-shadow(0 0 32px rgba(74, 128, 248, 0.32))
-      drop-shadow(0 0 68px rgba(74, 128, 248, 0.16));
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .neon:not(.is-in) {
-    opacity: 0;
-  }
-
-  .neon.is-in {
-    animation:
-      neon-strike 1500ms ease-out both,
-      neon-breathe 3600ms ease-in-out infinite;
   }
 }
 

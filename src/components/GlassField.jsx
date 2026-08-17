@@ -1,80 +1,64 @@
 import { useId } from "react";
 import useInView from "../hooks/useInView";
 import { rnd } from "../lib/facets";
-import { MARK } from "./Logo";
+import { MARK, RING_R, RING_X, RING_Y } from "../lib/mark";
 
-/* Splinters of glass lying across the hero, each one catching the logo.
-   Every shard is a triangle clipping its own copy of the mark, placed so an
-   arc of the ring cuts across it — the same object seen in pieces rather
-   than a pattern repeated.
+/* One logo, laid across the whole hero at size, and a field of glass lying
+   on top of it. Every shard clips the same image, so no shard carries a logo
+   of its own — the mark only exists in what the pieces hold between them.
 
    The clip travels with the shard: a transform on the group moves the
-   clip-path with the content, so a shard is one object that can be thrown
-   outward rather than a fixed window with something sliding behind it. */
+   clip-path with the content, so each fragment keeps its own slice of the
+   image as it is thrown. */
 const HERO_W = 1440;
 const HERO_H = 810;
-const COUNT = 42;
 const CENTRE_X = 720;
 const CENTRE_Y = 405;
 
-/* Shards ring the hero rather than dusting it. HOLE keeps the middle clear
-   outright — biasing a full disc outward still leaves pieces near the centre,
-   which is what made the field read as scatter — and inside the remaining
-   annulus r = HOLE + (1-HOLE)·u^BIAS packs them further towards the rim.
+/* The mark is scaled so its ring lands in the crowded outer band. That is
+   what makes the shards add up to something: the ring is where the glass is
+   thickest, so the circle is what emerges. */
+const RING_ON_SCREEN = 470;
+const MARK_SCALE = RING_ON_SCREEN / RING_R;
+const MARK_TRANSFORM = `translate(${(CENTRE_X - MARK_SCALE * RING_X).toFixed(2)} ${(CENTRE_Y - MARK_SCALE * RING_Y).toFixed(2)}) scale(${MARK_SCALE.toFixed(4)})`;
 
-   The rim is set at the frame edge, not inside it, so the outermost shards
-   are cut off by it. Glass caught mid-air runs past the edge of the picture;
-   stopping short of it reads as a decorative border instead. */
-const SPREAD_X = 730;
-const SPREAD_Y = 465;
-const HOLE = 0.46;
-const BIAS = 0.42;
-
-/* Ring centre and radius inside the mark's own 98x98 space. */
-const RING_X = 48.3591;
-const RING_Y = 46.8377;
-const RING_R = 25.29;
+/* Near-circular so the band tracks the ring, which is circular too. */
+const SPREAD = 580;
+const COUNT = 84;
+const CORE = 7; // shards held back for the M at the centre
+const HOLE = 0.5;
+const BIAS = 0.28;
 
 function buildShards() {
   return Array.from({ length: COUNT }, (_, k) => {
+    const onCore = k < CORE;
     const angle = rnd(k * 3.7 + 1) * Math.PI * 2;
-    const reach = HOLE + (1 - HOLE) * Math.pow(rnd(k * 5.3 + 2), BIAS);
-    const cx = CENTRE_X + Math.cos(angle) * SPREAD_X * reach;
-    const cy = CENTRE_Y + Math.sin(angle) * SPREAD_Y * reach;
+    /* Everything but a handful sits outside HOLE and is pushed hard towards
+       the rim; the few held back cover the M so the centre is not a void. */
+    const reach = onCore
+      ? 0.04 + rnd(k * 5.3 + 2) * 0.16
+      : HOLE + (1 - HOLE) * Math.pow(rnd(k * 5.3 + 2), BIAS);
 
-    /* Finer towards the rim, so the denser edge reads as debris rather than
-       as a ring of large plates. */
-    const size = (34 + rnd(k * 7.9 + 3) * 70) * (1.2 - reach * 0.5);
+    const cx = CENTRE_X + Math.cos(angle) * SPREAD * reach;
+    const cy = CENTRE_Y + Math.sin(angle) * SPREAD * reach;
+    const size = onCore
+      ? 34 + rnd(k * 7.9 + 3) * 30
+      : (62 + rnd(k * 7.9 + 3) * 104) * (1.12 - reach * 0.3);
 
     /* Wedges, not even triangles: one vertex thrown well out along the line
        from the centre and two kept close behind it. Even triangles read as
-       confetti — a splinter has a direction, and here it is the direction it
-       flew. */
+       confetti — a splinter carries the direction it flew. */
     const outward = Math.atan2(cy - CENTRE_Y, cx - CENTRE_X);
     const tip = outward + (rnd(k * 11.3 + 4) - 0.5) * 1.6;
-    const flare = 0.4 + rnd(k * 53.1 + 15) * 0.55;
-    const spread = [
-      { a: tip, r: size * (1.05 + rnd(k * 31 + 1) * 0.95) },
-      {
-        a: tip + Math.PI - flare,
-        r: size * (0.26 + rnd(k * 37 + 2) * 0.36),
-      },
-      {
-        a: tip + Math.PI + flare,
-        r: size * (0.26 + rnd(k * 41 + 3) * 0.36),
-      },
-    ];
-    const points = spread.map((v) => ({
+    const flare = 0.38 + rnd(k * 53.1 + 15) * 0.6;
+    const points = [
+      { a: tip, r: size * (1.05 + rnd(k * 31 + 1) * 1.0) },
+      { a: tip + Math.PI - flare, r: size * (0.26 + rnd(k * 37 + 2) * 0.38) },
+      { a: tip + Math.PI + flare, r: size * (0.26 + rnd(k * 41 + 3) * 0.38) },
+    ].map((v) => ({
       x: cx + Math.cos(v.a) * v.r,
       y: cy + Math.sin(v.a) * v.r,
     }));
-
-    /* Scale the mark up and drop its ring centre one radius away from the
-       shard, so the arc passes straight through what the shard shows. */
-    const scale = 2.6 + rnd(k * 13.7 + 5) * 6.4;
-    const bearing = rnd(k * 17.1 + 6) * Math.PI * 2;
-    const ringX = cx + Math.cos(bearing) * RING_R * scale;
-    const ringY = cy + Math.sin(bearing) * RING_R * scale;
 
     const pull = 0.35 + rnd(k * 19.3 + 7) * 0.4;
 
@@ -82,9 +66,8 @@ function buildShards() {
       points: points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
       cx,
       cy,
-      reflect: `translate(${(ringX - scale * RING_X).toFixed(2)} ${(ringY - scale * RING_Y).toFixed(2)}) scale(${scale.toFixed(3)}) rotate(${(rnd(k * 23.9 + 8) * 360).toFixed(1)} ${RING_X} ${RING_Y})`,
-      flat: 0.1 + rnd(k * 29.5 + 9) * 0.2,
-      tint: 0.45 + rnd(k * 47.3 + 14) * 0.4,
+      flat: 0.12 + rnd(k * 29.5 + 9) * 0.2,
+      tint: 0.5 + rnd(k * 47.3 + 14) * 0.4,
       tx: -(cx - CENTRE_X) * pull,
       ty: -(cy - CENTRE_Y) * pull,
       rot: (rnd(k * 31.7 + 10) - 0.5) * 70,
@@ -113,9 +96,11 @@ export default function GlassField({ delay = 0, className = "" }) {
       className={`pointer-events-none ${className}`}
     >
       <defs>
-        <path id={markId} d={MARK} />
+        <g id={markId} transform={MARK_TRANSFORM}>
+          <path d={MARK} />
+        </g>
 
-        {/* The logo file's own gradient, kept as authored. */}
+        {/* The logo file's own gradient, kept as authored and scaled with it. */}
         <radialGradient
           id={tintId}
           cx="0"
@@ -153,22 +138,20 @@ export default function GlassField({ delay = 0, className = "" }) {
             "--kd": inView ? `${shard.duration.toFixed(0)}ms` : "0ms",
           }}
         >
-          {/* A faint pane so the fragment reads as glass even where no arc
-              crosses it. */}
-          <polygon points={shard.points} fill="#4a80f8" opacity="0.045" />
+          {/* A faint pane so the fragment reads as glass where the mark does
+              not reach it. */}
+          <polygon points={shard.points} fill="#4a80f8" opacity="0.05" />
 
           {/* Flat underlay first: the file's gradient is transparent at
-              exactly the ring's radius, so on its own the circle — the part
-              of the mark these shards are cut to catch — would not show. */}
+              exactly the ring's radius, and the ring is the part the field is
+              built around. */}
           <use
             href={`#${markId}`}
-            transform={shard.reflect}
             fill="#4a80f8"
             opacity={shard.flat.toFixed(3)}
           />
           <use
             href={`#${markId}`}
-            transform={shard.reflect}
             fill={`url(#${tintId})`}
             opacity={shard.tint.toFixed(3)}
           />

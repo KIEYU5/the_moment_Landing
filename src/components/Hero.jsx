@@ -1,6 +1,5 @@
 import Brush from "./Brush";
 import GlassField from "./GlassField";
-import Logo from "./Logo";
 import Reveal from "./Reveal";
 import Wordmark from "./Wordmark";
 
@@ -15,7 +14,6 @@ const NAV_LINKS = [
    is cut — and the wordmark then resolves out of its own facets, starting at
    the M and working outward. Wordmark spreads its facet delays internally. */
 const NAV_STEP = 60;
-const LOGO_DELAY = 160;
 const BRUSH_DELAY = 300;
 const WORDMARK_DELAY = 1280;
 
@@ -54,11 +52,6 @@ export default function Hero() {
       </nav>
 
       <div className="mt-auto w-full pb-[2.19%]">
-        <Logo
-          delay={LOGO_DELAY}
-          className="mx-auto w-[clamp(64px,7vw,116px)] mb-[clamp(20px,3vw,48px)]"
-        />
-
         <div className="relative w-full aspect-[1440/159]">
           <Wordmark delay={WORDMARK_DELAY} />
           <Brush
