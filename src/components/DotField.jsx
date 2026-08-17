@@ -9,11 +9,10 @@ import { useEffect, useRef } from "react";
    are still fixed, and what changes per frame is each dot's radius, alpha
    and colour.
 
-   Three sine waves are summed per dot: two diagonal bands travelling in
-   opposite directions and a ripple spreading out from a point low on the
-   left. Two would beat against each other on a visible cycle; the third,
-   on an unrelated period and a different geometry, is what stops the field
-   from reading as a repeating pattern.
+   Two things are summed per dot. A slow drift of crossed diagonal waves
+   keeps the field alive, and on top of it three origins each emit a ring
+   that leaves at full strength and thins as it travels out. The rings are
+   what carry the spreading; the drift is only the water they cross.
 
    Colour is the pointer's job. At rest a dot is a neutral grey, and it
    crosses to the brand blue as the pointer closes on it — so the wave is
@@ -25,24 +24,43 @@ const TAU = Math.PI * 2;
 
 /* Swell. The floor is deliberately above zero: a dot at the bottom of the
    wave shrinks rather than disappearing, so the lattice stays present. */
-const R_MIN = 0.7;
+const R_MIN = 0.75;
 const R_MAX = 3.2;
-const A_MIN = 0.1;
+const A_MIN = 0.14;
 const A_MAX = 0.72;
 
-/* Wavelength in px and period in seconds, written out rather than folded
-   into a divisor — the divisor form hides the factor of TAU, and getting it
-   wrong buys a wave whose period is wider than the screen, so the entire
-   field swells and falls in unison instead of carrying a crest across it.
-   The second wave runs backwards (negative period) against the first, and
-   the periods are mutually prime-ish so the pair never resolves into a
-   repeat you can catch. */
+/* The drift: fine texture under everything, so the field is never dead
+   between fronts. Wavelength in px and period in seconds, written out rather
+   than folded into a divisor — the divisor form hides the factor of TAU, and
+   getting it wrong buys a wave whose period is wider than the screen, so the
+   entire field swells and falls in unison instead of carrying a crest across
+   it. The second runs backwards against the first, and the periods do not
+   divide into each other, so the pair never resolves into a repeat.
+
+   Deliberately scaled to reach mid-swell at most: this is the water, and
+   the pulses below are the wave. */
 const WAVES = [
-  { dx: 0.48, dy: 0.88, lambda: 460, period: 9, amp: 0.5 },
-  { dx: 0.92, dy: -0.39, lambda: 700, period: -13, amp: 0.28 },
+  { dx: 0.48, dy: 0.88, lambda: 300, period: 13, amp: 0.34 },
+  { dx: 0.92, dy: -0.39, lambda: 420, period: -17, amp: 0.22 },
 ];
-const RIPPLE = { lambda: 520, period: 11, amp: 0.34 };
-const TOTAL = WAVES.reduce((s, w) => s + w.amp, RIPPLE.amp);
+const DRIFT = WAVES.reduce((s, w) => s + w.amp, 0);
+/* Mid sets how much lattice is left between fronts and swing how much of it
+   moves. Mid too low and the field empties out to nothing once a front has
+   passed; swing too high and the drift starts competing with the fronts for
+   the same reading. */
+const DRIFT_MID = 0.26;
+const DRIFT_SWING = 0.3;
+
+/* The fronts. A standing ring pattern only ever reads as texture, so each
+   origin instead emits a ring on its own period: born at the origin at full
+   strength, travelling out at `speed`, thinning as it goes. Three of them on
+   unrelated periods means something is always spreading somewhere without
+   the three ever lining up. Positions are fractions of the field. */
+const PULSES = [
+  { x: 0.32, y: 0.74, period: 8.5, offset: 0, speed: 235, width: 105, amp: 1 },
+  { x: 0.79, y: 0.24, period: 11, offset: 4.4, speed: 200, width: 125, amp: 0.8 },
+  { x: 0.55, y: 0.46, period: 13.5, offset: 7.6, speed: 175, width: 145, amp: 0.62 },
+];
 
 const BASE = [154, 161, 170];
 const BRAND = [74, 128, 248];
@@ -60,20 +78,29 @@ const HALO_SIZE = 32;
    larger, brighter dots the way a halftone wave does, rather than the whole
    field breathing in and out at one size.
 
-   The bias pushes roughly a third of the field under zero and holds it
-   there: without it the swell only ever ranges between small and large and
-   the lattice reads as a uniform grid shimmering, where what makes a wave
-   legible is the quiet water around it. */
-function swell(x, y, t, rx, ry) {
+   The drift is kept low and the result clamps at zero, so a good part of the
+   field sits flat between fronts: what makes a wave legible is the quiet
+   water around it, and a lattice that is swelling everywhere just shimmers. */
+function swell(x, y, t, w, h) {
   let s = 0;
-  for (const w of WAVES) {
-    s += w.amp * Math.sin(TAU * ((x * w.dx + y * w.dy) / w.lambda - t / w.period));
+  for (const wave of WAVES) {
+    const u = (x * wave.dx + y * wave.dy) / wave.lambda - t / wave.period;
+    s += wave.amp * Math.sin(TAU * u);
   }
-  s +=
-    RIPPLE.amp *
-    Math.sin(TAU * (Math.hypot(x - rx, y - ry) / RIPPLE.lambda - t / RIPPLE.period));
-  const n = Math.min(1, Math.max(0, (s / TOTAL + 0.25) / 0.95));
-  return n * n * (3 - 2 * n);
+  let n = DRIFT_MID + (s / DRIFT) * DRIFT_SWING;
+
+  for (const p of PULSES) {
+    /* Age of the ring currently in flight from this origin. `fall` squared
+       is what makes it a spreading wave rather than a repeating ring: the
+       front is brightest as it leaves and gives out as it travels. */
+    const age = (((t - p.offset) % p.period) + p.period) % p.period;
+    const gap = Math.hypot(x - p.x * w, y - p.y * h) - age * p.speed;
+    const fall = 1 - age / p.period;
+    n += p.amp * Math.exp(-(gap * gap) / (2 * p.width * p.width)) * fall * fall;
+  }
+
+  const c = Math.min(1, Math.max(0, n));
+  return c * c * (3 - 2 * c);
 }
 
 /* The glow is one pre-rendered sprite rather than a shadow per dot. Canvas
@@ -149,8 +176,6 @@ export default function DotField({ on = false, className = "" }) {
 
     const draw = (t) => {
       ctx.clearRect(0, 0, w, h);
-      const rx = w * 0.36;
-      const ry = h * 0.74;
       const cols = Math.ceil(w / SPACING);
       const rows = Math.ceil(h / SPACING);
       const half = (w - (cols - 1) * SPACING) / 2;
@@ -159,7 +184,7 @@ export default function DotField({ on = false, className = "" }) {
         const y = row * SPACING;
         for (let col = 0; col <= cols; col++) {
           const x = half + col * SPACING;
-          const s = swell(x, y, t, rx, ry);
+          const s = swell(x, y, t, w, h);
 
           let lit = 0;
           if (strength > 0.001) {
