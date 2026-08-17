@@ -1,5 +1,6 @@
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
+import { GROUP, beat } from "../lib/timing";
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "#" },
@@ -26,7 +27,7 @@ export default function Footer() {
         <Faceted
           as="p"
           density="coarse"
-          delay={140}
+          delay={beat(1)}
           className="font-bold text-[#9aa0ab] text-subtitle mt-4"
         >
           A development partner innovating the moment.
@@ -34,7 +35,7 @@ export default function Footer() {
         <Faceted
           as="p"
           density="wide"
-          delay={280}
+          delay={beat(2)}
           className="font-normal text-[#767c87] text-caption mt-block"
         >
           © 2026 the_moment. All rights reserved.
@@ -42,7 +43,7 @@ export default function Footer() {
       </div>
 
       <Reveal
-        delay={140}
+        delay={GROUP}
         className="lg:w-[38%] bg-[#4a80f8] px-gutter py-section flex gap-block"
       >
         <div className="flex flex-col gap-stack">

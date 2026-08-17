@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
+import { BEAT, GROUP, beat } from "../lib/timing";
 
 /* Stacked full-width cards, one open at a time. The main project starts
    open; pointing at another opens it and closes the one before. */
@@ -54,7 +55,7 @@ export default function Projects() {
           {PROJECTS.map((p, i) => {
             const isOpen = open === i;
             return (
-              <Reveal key={p.label} delay={i * 120} className="w-full">
+              <Reveal key={p.label} delay={beat(i, GROUP)} className="w-full">
                 <div
                   /* Focus opens it too, so the card is reachable by keyboard,
                      and the tap handler covers touch, where hover never
@@ -67,7 +68,7 @@ export default function Projects() {
                 >
                   <Faceted
                     as="p"
-                    delay={i * 120 + 80}
+                    delay={beat(i, GROUP)}
                     className="font-bold text-black text-title"
                   >
                     TITLE
@@ -75,7 +76,7 @@ export default function Projects() {
                   <Faceted
                     as="p"
                     density="wide"
-                    delay={i * 120 + 200}
+                    delay={beat(i, GROUP) + BEAT}
                     className="font-bold text-black text-label"
                   >
                     {p.label}
@@ -83,7 +84,7 @@ export default function Projects() {
                   <Faceted
                     as="p"
                     density="coarse"
-                    delay={i * 120 + 300}
+                    delay={beat(i, GROUP) + 2 * BEAT}
                     className="font-semibold text-[#555962] text-body"
                   >
                     {p.explain}

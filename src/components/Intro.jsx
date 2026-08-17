@@ -1,4 +1,5 @@
 import Faceted from "./Faceted";
+import { BEAT, GROUP, beat } from "../lib/timing";
 
 const PHILOSOPHY = [
   ["우리는 현장에서 답을 찾습니다."],
@@ -16,16 +17,12 @@ export default function Intro() {
       <div className="px-gutter py-section">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
           <div>
-            <Faceted
-              as="p"
-              delay={120}
-              className="font-bold text-[#292b2f] text-lead"
-            >
-              순간을 혁신하는 Development Partner
+            <Faceted as="p" className="font-bold text-[#292b2f] text-lead">
+              광주소프트웨어마이스터고 학생 개발팀
             </Faceted>
             <Faceted
               as="p"
-              delay={300}
+              delay={BEAT}
               className="font-bold text-[#4a80f8] text-display"
             >
               더모먼트
@@ -38,7 +35,7 @@ export default function Intro() {
                 as="p"
                 key={i}
                 density="coarse"
-                delay={i * 90}
+                delay={beat(i, GROUP)}
                 className="mb-6 last:mb-0"
               >
                 {block.map((line, j) => (

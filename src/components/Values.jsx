@@ -1,4 +1,5 @@
 import Faceted from "./Faceted";
+import { beat } from "../lib/timing";
 
 const WORDS = [
   "BREAKTHROUGH",
@@ -108,7 +109,7 @@ export default function Values() {
                 <Faceted
                   as="p"
                   density="coarse"
-                  delay={120}
+                  delay={beat(1)}
                   className="font-bold text-[#e9e9e9] text-title shrink-0"
                 >
                   {v.num}
@@ -116,7 +117,7 @@ export default function Values() {
                 <div className="flex flex-col gap-stack min-w-0">
                   <Faceted
                     as="p"
-                    delay={200}
+                    delay={beat(2)}
                     className="font-bold text-[#292b2f] text-lead max-w-[688px]"
                   >
                     {v.title}
@@ -124,7 +125,7 @@ export default function Values() {
                   <Faceted
                     as="p"
                     density="coarse"
-                    delay={320}
+                    delay={beat(3)}
                     className="font-semibold text-[#555962] text-body"
                   >
                     {v.sub}

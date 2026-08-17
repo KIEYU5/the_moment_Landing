@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
+import { BEAT, GROUP, beat } from "../lib/timing";
 
 const FIELDS = [
   { key: "name", type: "text", title: "TITLE", sub: "SUBEXPLAIN" },
@@ -46,14 +47,14 @@ export default function Contact() {
             return (
               <Reveal
                 key={field.key}
-                delay={i * 120}
+                delay={beat(i, GROUP)}
                 className="flex flex-col gap-2 w-full"
               >
                 <Faceted
                   as="label"
                   htmlFor={id}
                   density="wide"
-                  delay={i * 120}
+                  delay={beat(i, GROUP)}
                   className="font-bold text-[#292b2f] text-label"
                 >
                   {field.title}
@@ -61,7 +62,7 @@ export default function Contact() {
                 <Faceted
                   as="p"
                   density="wide"
-                  delay={i * 120 + 80}
+                  delay={beat(i, GROUP) + BEAT}
                   className="font-normal text-[#555962] text-caption"
                 >
                   {field.sub}
@@ -93,7 +94,7 @@ export default function Contact() {
             );
           })}
 
-          <Reveal delay={360} className="flex items-center gap-4">
+          <Reveal delay={beat(3, GROUP)} className="flex items-center gap-4">
             <button
               type="submit"
               className="bg-[#292b2f] text-white font-bold text-body px-8 py-4 transition-colors duration-500 ease-out hover:bg-[#4a80f8] focus-visible:bg-[#4a80f8] outline-none"
