@@ -13,21 +13,22 @@ import { MARK } from "./Logo";
    outward rather than a fixed window with something sliding behind it. */
 const HERO_W = 1440;
 const HERO_H = 810;
-const COUNT = 30;
+const COUNT = 42;
 const CENTRE_X = 720;
 const CENTRE_Y = 405;
 
-/* r = u^BIAS with BIAS below 0.5 pushes samples outward — at 0.5 the density
-   would be even across the area, and lower packs them towards the rim,
-   leaving the middle open for the wordmark.
+/* Shards ring the hero rather than dusting it. HOLE keeps the middle clear
+   outright — biasing a full disc outward still leaves pieces near the centre,
+   which is what made the field read as scatter — and inside the remaining
+   annulus r = HOLE + (1-HOLE)·u^BIAS packs them further towards the rim.
 
-   The ellipse has to stay inside the frame or the whole point is lost: most
-   shards sit near its rim, and a rim wider than the hero puts the dense band
-   off-canvas. The hero is also drawn with `slice`, which crops the sides
-   further, so this is kept well within 1440x810. */
-const SPREAD_X = 640;
-const SPREAD_Y = 390;
-const BIAS = 0.32;
+   The rim is set at the frame edge, not inside it, so the outermost shards
+   are cut off by it. Glass caught mid-air runs past the edge of the picture;
+   stopping short of it reads as a decorative border instead. */
+const SPREAD_X = 730;
+const SPREAD_Y = 465;
+const HOLE = 0.46;
+const BIAS = 0.42;
 
 /* Ring centre and radius inside the mark's own 98x98 space. */
 const RING_X = 48.3591;
@@ -37,21 +38,36 @@ const RING_R = 25.29;
 function buildShards() {
   return Array.from({ length: COUNT }, (_, k) => {
     const angle = rnd(k * 3.7 + 1) * Math.PI * 2;
-    const reach = Math.pow(rnd(k * 5.3 + 2), BIAS);
+    const reach = HOLE + (1 - HOLE) * Math.pow(rnd(k * 5.3 + 2), BIAS);
     const cx = CENTRE_X + Math.cos(angle) * SPREAD_X * reach;
     const cy = CENTRE_Y + Math.sin(angle) * SPREAD_Y * reach;
 
     /* Finer towards the rim, so the denser edge reads as debris rather than
        as a ring of large plates. */
-    const size = (30 + rnd(k * 7.9 + 3) * 66) * (1.15 - reach * 0.45);
+    const size = (34 + rnd(k * 7.9 + 3) * 70) * (1.2 - reach * 0.5);
 
-    const spin = rnd(k * 11.3 + 4) * Math.PI * 2;
-    const points = [0, 1, 2].map((i) => {
-      const a =
-        spin + (i * 2 * Math.PI) / 3 + (rnd(k * 31 + i * 3 + 1) - 0.5) * 1.2;
-      const rad = size * (0.55 + rnd(k * 37 + i * 5 + 2) * 0.7);
-      return { x: cx + Math.cos(a) * rad, y: cy + Math.sin(a) * rad };
-    });
+    /* Wedges, not even triangles: one vertex thrown well out along the line
+       from the centre and two kept close behind it. Even triangles read as
+       confetti — a splinter has a direction, and here it is the direction it
+       flew. */
+    const outward = Math.atan2(cy - CENTRE_Y, cx - CENTRE_X);
+    const tip = outward + (rnd(k * 11.3 + 4) - 0.5) * 1.6;
+    const flare = 0.4 + rnd(k * 53.1 + 15) * 0.55;
+    const spread = [
+      { a: tip, r: size * (1.05 + rnd(k * 31 + 1) * 0.95) },
+      {
+        a: tip + Math.PI - flare,
+        r: size * (0.26 + rnd(k * 37 + 2) * 0.36),
+      },
+      {
+        a: tip + Math.PI + flare,
+        r: size * (0.26 + rnd(k * 41 + 3) * 0.36),
+      },
+    ];
+    const points = spread.map((v) => ({
+      x: cx + Math.cos(v.a) * v.r,
+      y: cy + Math.sin(v.a) * v.r,
+    }));
 
     /* Scale the mark up and drop its ring centre one radius away from the
        shard, so the arc passes straight through what the shard shows. */
