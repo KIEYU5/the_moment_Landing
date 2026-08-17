@@ -1,5 +1,4 @@
 import Brush from "./Brush";
-import GlassField from "./GlassField";
 import Reveal from "./Reveal";
 import Wordmark from "./Wordmark";
 
@@ -32,12 +31,6 @@ const WORDMARK_DELAY = 1280;
 export default function Hero() {
   return (
     <section className="relative w-full min-h-dvh flex flex-col overflow-hidden bg-white">
-      {/* Behind everything, and thrown outward on the wordmark's cue. */}
-      <GlassField
-        delay={WORDMARK_DELAY}
-        className="absolute inset-0 w-full h-full"
-      />
-
       <nav className="shrink-0 flex items-center justify-center gap-[clamp(16px,3.3vw,48px)] whitespace-nowrap pt-5 sm:pt-6">
         {NAV_LINKS.map((link, i) => (
           <Reveal key={link.label} delay={i * NAV_STEP}>
