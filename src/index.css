@@ -119,18 +119,7 @@ body {
   pointer-events: none;
   opacity: 0;
   transition: opacity 700ms ease;
-  /* Two layers on the same grid: a hard core and a soft halo under it. A
-     drop-shadow filter would give the same look but has to blur every dot in
-     the field, where a second gradient costs nothing. The halo stops well
-     short of 30px so neighbours do not bleed into each other. */
-  background-image: radial-gradient(circle, #4a80f8 1.7px, transparent 2px),
-    radial-gradient(
-      circle,
-      rgba(74, 128, 248, 0.5) 0,
-      rgba(74, 128, 248, 0.28) 3px,
-      rgba(74, 128, 248, 0.1) 6px,
-      transparent 10px
-    );
+  background-image: radial-gradient(circle, #4a80f8 1.7px, transparent 2px);
   background-size: 30px 30px;
   -webkit-mask-image: radial-gradient(
     var(--glow) circle at var(--mx) var(--my),
@@ -145,6 +134,36 @@ body {
     rgba(0, 0, 0, 0.66) 34%,
     rgba(0, 0, 0, 0.3) 68%,
     rgba(0, 0, 0, var(--floor)) 100%
+  );
+}
+
+/* The halo has to be its own layer, because it needs a different mask from
+   the dots underneath it. A mask applies to the whole element, not per
+   background layer, so the two cannot share one box: the dots want a mask
+   that never quite reaches zero, and the halo wants one that does — only a
+   dot the pointer is actually lighting should carry any glow. */
+.dot-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    rgba(74, 128, 248, 0.26) 0,
+    rgba(74, 128, 248, 0.12) 3px,
+    transparent 7px
+  );
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(
+    calc(var(--glow) * 0.42) circle at var(--mx) var(--my),
+    #000 0%,
+    rgba(0, 0, 0, 0.45) 55%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    calc(var(--glow) * 0.42) circle at var(--mx) var(--my),
+    #000 0%,
+    rgba(0, 0, 0, 0.45) 55%,
+    transparent 100%
   );
 }
 
