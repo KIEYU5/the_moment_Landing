@@ -20,14 +20,20 @@ export const REVEAL_RUNS = 950;
 export const INVERT_RUNS = 900;
 export const DOTS_RUNS = 700;
 
-/* The hero is a chain: each phase starts when the one before it has finished,
-   and every length is asked of whatever owns it rather than estimated. The M
-   and the wordmark count as one phase — they share a cue. */
-const MARK_AT = 220;
+/* The hero is a chain, and every length in it is asked of whatever owns that
+   length rather than estimated.
+
+   The opening is one phase, not three: the M is painted, the wordmark gathers
+   out of its facets and the navigation arrives, all on the same cue. Holding
+   the nav back until the mark had settled was costing 1.2s before the colour
+   swap could even begin.
+
+   The swap then waits on whichever of the two is still going. */
+const MARK_AT = 140;
+const NAV_AT = MARK_AT;
 const MARK_RUNS = Math.max(BRUSH_RUNS, WORDMARK_RUNS);
-const NAV_AT = MARK_AT + MARK_RUNS;
 const NAV_RUNS = 3 * BEAT + REVEAL_RUNS; // last link's stagger plus its travel
-const INVERT_AT = NAV_AT + NAV_RUNS;
+const INVERT_AT = Math.max(MARK_AT + MARK_RUNS, NAV_AT + NAV_RUNS);
 const DOTS_AT = INVERT_AT + INVERT_RUNS;
 
 export const HERO = {

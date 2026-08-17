@@ -46,7 +46,11 @@ const ROWS = 3;
 
 /* The M is the facet everything else resolves outward from. */
 const M_CENTRE = 541;
-const SPREAD = 780;
+/* The cascade, not the travel: this is how long the last facet waits before
+   it starts, so it sets the wordmark's total length and everything the hero
+   queues behind it. Shortened to bring the colour swap forward without making
+   any single facet move faster. */
+const SPREAD = 620;
 
 /* Motion envelope. Every facet draws its own values from this range, timing
    included — a shared duration makes 72 shards arrive as one flat wave. The
@@ -140,7 +144,7 @@ function buildFacets() {
       scale,
       duration: DUR_MIN + r6 * DUR_RANGE,
       delay:
-        (Math.abs(cx - M_CENTRE) / (VIEW_W - M_CENTRE)) * SPREAD + r1 * 120,
+        (Math.abs(cx - M_CENTRE) / (VIEW_W - M_CENTRE)) * SPREAD + r1 * 90,
     };
   });
 }

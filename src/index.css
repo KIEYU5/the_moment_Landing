@@ -119,7 +119,18 @@ body {
   pointer-events: none;
   opacity: 0;
   transition: opacity 700ms ease;
-  background-image: radial-gradient(circle, #4a80f8 1.7px, transparent 1.9px);
+  /* Two layers on the same grid: a hard core and a soft halo under it. A
+     drop-shadow filter would give the same look but has to blur every dot in
+     the field, where a second gradient costs nothing. The halo stops well
+     short of 30px so neighbours do not bleed into each other. */
+  background-image: radial-gradient(circle, #4a80f8 1.7px, transparent 2px),
+    radial-gradient(
+      circle,
+      rgba(74, 128, 248, 0.5) 0,
+      rgba(74, 128, 248, 0.28) 3px,
+      rgba(74, 128, 248, 0.1) 6px,
+      transparent 10px
+    );
   background-size: 30px 30px;
   -webkit-mask-image: radial-gradient(
     var(--glow) circle at var(--mx) var(--my),
