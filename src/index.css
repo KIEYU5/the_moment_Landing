@@ -100,36 +100,40 @@ body {
 
 /* ---------- pointer lattice ----------
    Dots are a repeating background, so their positions and spacing are fixed
-   and nothing is drawn per dot. The mask is what follows the pointer: opaque
-   where it sits, gone by its outer edge, so the near dots read as lit and the
-   far ones fade out. Two custom properties change per frame, no elements. */
+   and nothing is drawn per dot. The mask is what follows the pointer: two
+   custom properties change per frame, no elements.
+
+   The last stop stops short of transparent, which leaves the whole lattice
+   faintly present rather than only existing under the cursor — the grid
+   reads as something already there that the pointer lights up, instead of
+   appearing out of nothing. --glow is the reach of that light. */
 
 .dot-field {
   --mx: 50%;
   --my: 50%;
+  --glow: 560px;
+  --floor: 0.13;
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   opacity: 0;
   transition: opacity 700ms ease;
-  background-image: radial-gradient(
-    circle,
-    #4a80f8 1.7px,
-    transparent 1.9px
-  );
+  background-image: radial-gradient(circle, #4a80f8 1.7px, transparent 1.9px);
   background-size: 30px 30px;
   -webkit-mask-image: radial-gradient(
-    260px circle at var(--mx) var(--my),
+    var(--glow) circle at var(--mx) var(--my),
     #000 0%,
-    rgba(0, 0, 0, 0.5) 45%,
-    transparent 72%
+    rgba(0, 0, 0, 0.66) 34%,
+    rgba(0, 0, 0, 0.3) 68%,
+    rgba(0, 0, 0, var(--floor)) 100%
   );
   mask-image: radial-gradient(
-    260px circle at var(--mx) var(--my),
+    var(--glow) circle at var(--mx) var(--my),
     #000 0%,
-    rgba(0, 0, 0, 0.5) 45%,
-    transparent 72%
+    rgba(0, 0, 0, 0.66) 34%,
+    rgba(0, 0, 0, 0.3) 68%,
+    rgba(0, 0, 0, var(--floor)) 100%
   );
 }
 
