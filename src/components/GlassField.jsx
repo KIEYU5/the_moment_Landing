@@ -13,44 +13,53 @@ import { MARK } from "./Logo";
    outward rather than a fixed window with something sliding behind it. */
 const HERO_W = 1440;
 const HERO_H = 810;
-const COUNT = 18;
+const COUNT = 30;
 const CENTRE_X = 720;
 const CENTRE_Y = 405;
 
-/* Ring centre inside the mark's own 98x98 space. */
+/* r = u^BIAS with BIAS below 0.5 pushes samples outward — at 0.5 the density
+   would be even across the area, and lower packs them towards the rim,
+   leaving the middle open for the wordmark.
+
+   The ellipse has to stay inside the frame or the whole point is lost: most
+   shards sit near its rim, and a rim wider than the hero puts the dense band
+   off-canvas. The hero is also drawn with `slice`, which crops the sides
+   further, so this is kept well within 1440x810. */
+const SPREAD_X = 640;
+const SPREAD_Y = 390;
+const BIAS = 0.32;
+
+/* Ring centre and radius inside the mark's own 98x98 space. */
 const RING_X = 48.3591;
 const RING_Y = 46.8377;
 const RING_R = 25.29;
 
 function buildShards() {
   return Array.from({ length: COUNT }, (_, k) => {
-    const cx = 70 + rnd(k * 3.7 + 1) * (HERO_W - 140);
-    const cy = 50 + rnd(k * 5.3 + 2) * (HERO_H - 150);
-    const size = 34 + rnd(k * 7.9 + 3) * 74;
+    const angle = rnd(k * 3.7 + 1) * Math.PI * 2;
+    const reach = Math.pow(rnd(k * 5.3 + 2), BIAS);
+    const cx = CENTRE_X + Math.cos(angle) * SPREAD_X * reach;
+    const cy = CENTRE_Y + Math.sin(angle) * SPREAD_Y * reach;
+
+    /* Finer towards the rim, so the denser edge reads as debris rather than
+       as a ring of large plates. */
+    const size = (30 + rnd(k * 7.9 + 3) * 66) * (1.15 - reach * 0.45);
 
     const spin = rnd(k * 11.3 + 4) * Math.PI * 2;
     const points = [0, 1, 2].map((i) => {
-      const ang =
+      const a =
         spin + (i * 2 * Math.PI) / 3 + (rnd(k * 31 + i * 3 + 1) - 0.5) * 1.2;
       const rad = size * (0.55 + rnd(k * 37 + i * 5 + 2) * 0.7);
-      return {
-        x: cx + Math.cos(ang) * rad,
-        y: cy + Math.sin(ang) * rad,
-      };
+      return { x: cx + Math.cos(a) * rad, y: cy + Math.sin(a) * rad };
     });
 
     /* Scale the mark up and drop its ring centre one radius away from the
        shard, so the arc passes straight through what the shard shows. */
     const scale = 2.6 + rnd(k * 13.7 + 5) * 6.4;
-    const reach = RING_R * scale;
     const bearing = rnd(k * 17.1 + 6) * Math.PI * 2;
-    const ringX = cx + Math.cos(bearing) * reach;
-    const ringY = cy + Math.sin(bearing) * reach;
+    const ringX = cx + Math.cos(bearing) * RING_R * scale;
+    const ringY = cy + Math.sin(bearing) * RING_R * scale;
 
-    /* Thrown outward from the middle of the hero: the hidden state sits back
-       along that line, smaller and turned. */
-    const dx = cx - CENTRE_X;
-    const dy = cy - CENTRE_Y;
     const pull = 0.35 + rnd(k * 19.3 + 7) * 0.4;
 
     return {
@@ -58,9 +67,10 @@ function buildShards() {
       cx,
       cy,
       reflect: `translate(${(ringX - scale * RING_X).toFixed(2)} ${(ringY - scale * RING_Y).toFixed(2)}) scale(${scale.toFixed(3)}) rotate(${(rnd(k * 23.9 + 8) * 360).toFixed(1)} ${RING_X} ${RING_Y})`,
-      opacity: 0.1 + rnd(k * 29.5 + 9) * 0.26,
-      tx: -dx * pull,
-      ty: -dy * pull,
+      flat: 0.1 + rnd(k * 29.5 + 9) * 0.2,
+      tint: 0.45 + rnd(k * 47.3 + 14) * 0.4,
+      tx: -(cx - CENTRE_X) * pull,
+      ty: -(cy - CENTRE_Y) * pull,
       rot: (rnd(k * 31.7 + 10) - 0.5) * 70,
       scale: 0.35 + rnd(k * 37.1 + 11) * 0.35,
       duration: 900 + rnd(k * 41.3 + 12) * 700,
@@ -75,6 +85,7 @@ export default function GlassField({ delay = 0, className = "" }) {
   const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const markId = `glass-mark-${uid}`;
+  const tintId = `glass-tint-${uid}`;
 
   return (
     <svg
@@ -87,6 +98,21 @@ export default function GlassField({ delay = 0, className = "" }) {
     >
       <defs>
         <path id={markId} d={MARK} />
+
+        {/* The logo file's own gradient, kept as authored. */}
+        <radialGradient
+          id={tintId}
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform={`translate(${RING_X} ${RING_Y}) rotate(90) scale(25.2875 25.2878)`}
+        >
+          <stop stopColor="#2438F8" />
+          <stop offset="0.296875" stopColor="#6A76E9" />
+          <stop offset="1" stopColor="#6A76E9" stopOpacity="0" />
+        </radialGradient>
+
         {SHARDS.map((shard, i) => (
           <clipPath key={i} id={`${markId}-c${i}`}>
             <polygon points={shard.points} />
@@ -112,13 +138,23 @@ export default function GlassField({ delay = 0, className = "" }) {
           }}
         >
           {/* A faint pane so the fragment reads as glass even where no arc
-              crosses it, then the reflection itself. */}
+              crosses it. */}
           <polygon points={shard.points} fill="#4a80f8" opacity="0.045" />
+
+          {/* Flat underlay first: the file's gradient is transparent at
+              exactly the ring's radius, so on its own the circle — the part
+              of the mark these shards are cut to catch — would not show. */}
           <use
             href={`#${markId}`}
             transform={shard.reflect}
             fill="#4a80f8"
-            opacity={shard.opacity.toFixed(3)}
+            opacity={shard.flat.toFixed(3)}
+          />
+          <use
+            href={`#${markId}`}
+            transform={shard.reflect}
+            fill={`url(#${tintId})`}
+            opacity={shard.tint.toFixed(3)}
           />
         </g>
       ))}
