@@ -30,11 +30,16 @@ const MARK_TRANSFORM = `translate(${(CENTRE_X - MARK_SCALE * RING_X).toFixed(2)}
 /* Density comes from count, not size. Bigger shards crowd the band inward
    until the pieces meet in the middle and the hero fills in; more of them at
    the same size thickens the border and leaves the centre alone. */
-const COUNT = 150;
+const COUNT = 200;
 const FLOATERS = 7; // a few chips adrift in the empty middle
 const OVERHANG = 70; // the border sits outside the frame, so shards get cut
-const BAND = 340; // how far in the deepest shard can sit
+/* Capped tight. Rejection pushes pieces inward — when a shallow spot is
+   taken the next attempt draws a new depth — so a deep band lets the retries
+   wander into the middle and the ramp flattens out. */
+const BAND = 240; // how far in the deepest shard can sit
 const DEPTH_BIAS = 2.4; // >1 crowds them towards the edge
+const GAP = 5; // clear air kept between neighbouring pieces
+const MAX_TRIES = 16; // attempts to fit one shard before giving up on it
 
 const EDGE_X0 = -OVERHANG;
 const EDGE_Y0 = -OVERHANG;
@@ -55,83 +60,153 @@ function onPerimeter(t) {
   return { x: EDGE_X0, y: EDGE_Y1 - d, nx: 1, ny: 0 };
 }
 
+/* Convex hull so the overlap test below is valid — separating axes only
+   decide it for convex shapes, and jittering a vertex inward can leave the
+   outline dented. */
+function hull(pts) {
+  const p = [...pts].sort((a, b) => a.x - b.x || a.y - b.y);
+  if (p.length < 3) return p;
+  const cross = (o, a, b) =>
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const half = (list) => {
+    const out = [];
+    for (const q of list) {
+      while (out.length >= 2 && cross(out[out.length - 2], out[out.length - 1], q) <= 0)
+        out.pop();
+      out.push(q);
+    }
+    return out;
+  };
+  const lower = half(p);
+  const upper = half([...p].reverse());
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+}
+
+function axesOf(poly) {
+  return poly.map((a, i) => {
+    const b = poly[(i + 1) % poly.length];
+    const ex = b.x - a.x;
+    const ey = b.y - a.y;
+    const len = Math.hypot(ex, ey) || 1;
+    return { x: -ey / len, y: ex / len };
+  });
+}
+
+/* Separating-axis test with a gap: if any axis leaves GAP of clear air
+   between the two outlines they are apart, and one such axis is enough. */
+function apart(a, b, gap) {
+  for (const ax of [...axesOf(a), ...axesOf(b)]) {
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let bMin = Infinity;
+    let bMax = -Infinity;
+    for (const p of a) {
+      const d = p.x * ax.x + p.y * ax.y;
+      if (d < aMin) aMin = d;
+      if (d > aMax) aMax = d;
+    }
+    for (const p of b) {
+      const d = p.x * ax.x + p.y * ax.y;
+      if (d < bMin) bMin = d;
+      if (d > bMax) bMax = d;
+    }
+    if (aMax + gap < bMin || bMax + gap < aMin) return true;
+  }
+  return false;
+}
+
+function candidate(k, attempt, adrift) {
+  const s = (n) => rnd(k * 101.7 + attempt * 7.3 + n);
+
+  const t = (k + 0.5 + (rnd(k * 3.7 + 1) - 0.5) * 0.85) / COUNT;
+  const edge = onPerimeter(((t % 1) + 1) % 1);
+  const depth = BAND * Math.pow(s(2), DEPTH_BIAS);
+
+  const cx = adrift ? 380 + s(21) * (HERO_W - 760) : edge.x + edge.nx * depth;
+  const cy = adrift ? 250 + s(22) * (HERO_H - 500) : edge.y + edge.ny * depth;
+
+  /* Each retry looks for a smaller piece, so late arrivals settle into the
+     gaps left over instead of failing outright. */
+  const shrink = Math.pow(0.93, attempt);
+  const size = (adrift ? 15 + s(3) * 24 : 44 + s(3) * 106) * shrink;
+
+  /* Three to five corners, stretched along one axis and knocked off the
+     ellipse per vertex: slivers, wedges and chipped plates rather than one
+     triangle repeated. Angles are generated in order so the outline never
+     crosses itself. */
+  const corners = 3 + Math.floor(s(16) * 3);
+  const long = size * (0.8 + s(17) * 0.9);
+  const short = size * (0.16 + s(18) * 0.38);
+  const axis = s(4) * Math.PI * 2;
+  const cosA = Math.cos(axis);
+  const sinA = Math.sin(axis);
+
+  const points = Array.from({ length: corners }, (_, i) => {
+    const a = ((i + 0.5 + (s(71 + i * 7) - 0.5) * 0.9) / corners) * Math.PI * 2;
+    const bite = 0.55 + s(73 + i * 11) * 0.65;
+    const px = Math.cos(a) * long * bite;
+    const py = Math.sin(a) * short * bite;
+    return { x: cx + px * cosA - py * sinA, y: cy + px * sinA + py * cosA };
+  });
+
+  const shape = hull(points);
+  const reach = Math.max(...shape.map((p) => Math.hypot(p.x - cx, p.y - cy)));
+  const pull = 0.35 + s(7) * 0.4;
+
+  return {
+    shape,
+    cx,
+    cy,
+    reach,
+    edge: 0.28 + s(19) * 0.4,
+    rim: 1 + s(23) * 1.4,
+    flat: 0.12 + s(9) * 0.2,
+    tint: 0.5 + s(14) * 0.4,
+    tx: -(cx - CENTRE_X) * pull,
+    ty: -(cy - CENTRE_Y) * pull,
+    rot: (s(10) - 0.5) * 70,
+    scale: 0.35 + s(11) * 0.35,
+    duration: 900 + s(12) * 700,
+    delay: s(13) * 420,
+  };
+}
+
 function buildShards() {
-  return Array.from({ length: COUNT + FLOATERS }, (_, k) => {
-    const adrift = k >= COUNT;
+  const placed = [];
 
-    /* One even step per shard, jittered by less than a step so the spacing
-       varies without ever tearing a hole in the band. */
-    const t = (k + 0.5 + (rnd(k * 3.7 + 1) - 0.5) * 0.85) / COUNT;
-    const edge = onPerimeter(((t % 1) + 1) % 1);
-    const depth = BAND * Math.pow(rnd(k * 5.3 + 2), DEPTH_BIAS);
+  for (let k = 0; k < COUNT + FLOATERS; k++) {
+    for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+      const c = candidate(k, attempt, k >= COUNT);
+      /* Bounding circles first — most pairs are nowhere near each other and
+         the separating-axis test is far too expensive to run on all of them. */
+      const clash = placed.some(
+        (p) =>
+          Math.hypot(p.cx - c.cx, p.cy - c.cy) < p.reach + c.reach + GAP &&
+          !apart(p.shape, c.shape, GAP),
+      );
+      if (!clash) {
+        placed.push(c);
+        break;
+      }
+    }
+  }
 
-    const cx = adrift
-      ? 380 + rnd(k * 83.1 + 21) * (HERO_W - 760)
-      : edge.x + edge.nx * depth;
-    const cy = adrift
-      ? 250 + rnd(k * 89.7 + 22) * (HERO_H - 500)
-      : edge.y + edge.ny * depth;
+  const fmt = (pts) =>
+    pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
 
-    /* Kept in check on purpose: the long axis runs up to 1.7x this and a
-       vertex can sit 1.2x further again, so a shard reaches about three
-       times its size from its own centre. Larger and the band stops being a
-       band — the pieces meet in the middle and the hero fills in. */
-    const size = adrift
-      ? 15 + rnd(k * 7.9 + 3) * 24
-      : 44 + rnd(k * 7.9 + 3) * 106;
-
-    /* Three to five corners, stretched along one axis and knocked off the
-       ellipse per vertex: slivers, wedges and chipped plates rather than one
-       triangle repeated. Angles are generated in order so the outline never
-       crosses itself. */
-    const corners = 3 + Math.floor(rnd(k * 59.3 + 16) * 3);
-    const long = size * (0.8 + rnd(k * 61.7 + 17) * 0.9);
-    const short = size * (0.16 + rnd(k * 67.1 + 18) * 0.38);
-    const axis = rnd(k * 11.3 + 4) * Math.PI * 2;
-    const cosA = Math.cos(axis);
-    const sinA = Math.sin(axis);
-
-    const points = Array.from({ length: corners }, (_, i) => {
-      const a =
-        ((i + 0.5 + (rnd(k * 71 + i * 7 + 3) - 0.5) * 0.9) / corners) *
-        Math.PI *
-        2;
-      const bite = 0.55 + rnd(k * 73 + i * 11 + 5) * 0.65;
-      const px = Math.cos(a) * long * bite;
-      const py = Math.sin(a) * short * bite;
-      return {
-        x: cx + px * cosA - py * sinA,
-        y: cy + px * sinA + py * cosA,
-      };
-    });
-
-    const pull = 0.35 + rnd(k * 19.3 + 7) * 0.4;
-
+  return placed.map((s) => ({
+    ...s,
+    points: fmt(s.shape),
     /* The same outline pulled in towards the centroid. Drawn as a second
        hairline it reads as the bevel on a thick piece of glass, which is
        most of what separates a shard from a translucent blob. */
-    const inset = points.map((p) => ({
-      x: cx + (p.x - cx) * 0.76,
-      y: cy + (p.y - cy) * 0.76,
-    }));
-
-    return {
-      points: points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
-      inset: inset.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
-      cx,
-      cy,
-      edge: 0.28 + rnd(k * 79.1 + 19) * 0.4,
-      rim: 1 + rnd(k * 97.3 + 23) * 1.4,
-      flat: 0.12 + rnd(k * 29.5 + 9) * 0.2,
-      tint: 0.5 + rnd(k * 47.3 + 14) * 0.4,
-      tx: -(cx - CENTRE_X) * pull,
-      ty: -(cy - CENTRE_Y) * pull,
-      rot: (rnd(k * 31.7 + 10) - 0.5) * 70,
-      scale: 0.35 + rnd(k * 37.1 + 11) * 0.35,
-      duration: 900 + rnd(k * 41.3 + 12) * 700,
-      delay: rnd(k * 43.9 + 13) * 420,
-    };
-  });
+    inset: fmt(
+      s.shape.map((p) => ({
+        x: s.cx + (p.x - s.cx) * 0.76,
+        y: s.cy + (p.y - s.cy) * 0.76,
+      })),
+    ),
+  }));
 }
 
 const SHARDS = buildShards();
