@@ -15,50 +15,78 @@ const HERO_H = 810;
 const CENTRE_X = 720;
 const CENTRE_Y = 405;
 
-/* The mark is scaled so its ring lands in the crowded outer band. That is
-   what makes the shards add up to something: the ring is where the glass is
-   thickest, so the circle is what emerges. */
-const RING_ON_SCREEN = 470;
+/* The mark is scaled until its ring reaches the left and right edges, where
+   the glass is. The band follows the frame and the ring is a circle, so they
+   only meet at the sides — the visible arcs are the two the frame crops. */
+const RING_ON_SCREEN = 720;
 const MARK_SCALE = RING_ON_SCREEN / RING_R;
 const MARK_TRANSFORM = `translate(${(CENTRE_X - MARK_SCALE * RING_X).toFixed(2)} ${(CENTRE_Y - MARK_SCALE * RING_Y).toFixed(2)}) scale(${MARK_SCALE.toFixed(4)})`;
 
-/* Near-circular so the band tracks the ring, which is circular too. */
-const SPREAD = 580;
-const COUNT = 84;
-const CORE = 7; // shards held back for the M at the centre
-const HOLE = 0.5;
-const BIAS = 0.28;
+/* Shards hug the frame rather than ringing the centre. Sampling an angle at
+   random clumps them — eighty pieces over a full turn leaves holes big enough
+   to see, which is what made the field look patchy. Walking the perimeter in
+   even steps instead guarantees the band closes all the way round, and the
+   depth curve keeps most of them near the edge. */
+const COUNT = 120;
+const OVERHANG = 70; // the border sits outside the frame, so shards get cut
+const BAND = 330; // how far in the deepest shard can sit
+const DEPTH_BIAS = 2.4; // >1 crowds them towards the edge
+
+const EDGE_X0 = -OVERHANG;
+const EDGE_Y0 = -OVERHANG;
+const EDGE_X1 = HERO_W + OVERHANG;
+const EDGE_Y1 = HERO_H + OVERHANG;
+
+/* A point at t around the frame, with the inward normal. */
+function onPerimeter(t) {
+  const w = EDGE_X1 - EDGE_X0;
+  const h = EDGE_Y1 - EDGE_Y0;
+  let d = t * (2 * (w + h));
+  if (d < w) return { x: EDGE_X0 + d, y: EDGE_Y0, nx: 0, ny: 1 };
+  d -= w;
+  if (d < h) return { x: EDGE_X1, y: EDGE_Y0 + d, nx: -1, ny: 0 };
+  d -= h;
+  if (d < w) return { x: EDGE_X1 - d, y: EDGE_Y1, nx: 0, ny: -1 };
+  d -= w;
+  return { x: EDGE_X0, y: EDGE_Y1 - d, nx: 1, ny: 0 };
+}
 
 function buildShards() {
   return Array.from({ length: COUNT }, (_, k) => {
-    const onCore = k < CORE;
-    const angle = rnd(k * 3.7 + 1) * Math.PI * 2;
-    /* Everything but a handful sits outside HOLE and is pushed hard towards
-       the rim; the few held back cover the M so the centre is not a void. */
-    const reach = onCore
-      ? 0.04 + rnd(k * 5.3 + 2) * 0.16
-      : HOLE + (1 - HOLE) * Math.pow(rnd(k * 5.3 + 2), BIAS);
+    /* One even step per shard, jittered by less than a step so the spacing
+       varies without ever tearing a hole in the band. */
+    const t = (k + 0.5 + (rnd(k * 3.7 + 1) - 0.5) * 0.85) / COUNT;
+    const edge = onPerimeter(((t % 1) + 1) % 1);
+    const depth = BAND * Math.pow(rnd(k * 5.3 + 2), DEPTH_BIAS);
+    const cx = edge.x + edge.nx * depth;
+    const cy = edge.y + edge.ny * depth;
 
-    const cx = CENTRE_X + Math.cos(angle) * SPREAD * reach;
-    const cy = CENTRE_Y + Math.sin(angle) * SPREAD * reach;
-    const size = onCore
-      ? 34 + rnd(k * 7.9 + 3) * 30
-      : (62 + rnd(k * 7.9 + 3) * 104) * (1.12 - reach * 0.3);
+    const size = 46 + rnd(k * 7.9 + 3) * 118;
 
-    /* Wedges, not even triangles: one vertex thrown well out along the line
-       from the centre and two kept close behind it. Even triangles read as
-       confetti — a splinter carries the direction it flew. */
-    const outward = Math.atan2(cy - CENTRE_Y, cx - CENTRE_X);
-    const tip = outward + (rnd(k * 11.3 + 4) - 0.5) * 1.6;
-    const flare = 0.38 + rnd(k * 53.1 + 15) * 0.6;
-    const points = [
-      { a: tip, r: size * (1.05 + rnd(k * 31 + 1) * 1.0) },
-      { a: tip + Math.PI - flare, r: size * (0.26 + rnd(k * 37 + 2) * 0.38) },
-      { a: tip + Math.PI + flare, r: size * (0.26 + rnd(k * 41 + 3) * 0.38) },
-    ].map((v) => ({
-      x: cx + Math.cos(v.a) * v.r,
-      y: cy + Math.sin(v.a) * v.r,
-    }));
+    /* Three to five corners, stretched along one axis and knocked off the
+       ellipse per vertex: slivers, wedges and chipped plates rather than one
+       triangle repeated. Angles are generated in order so the outline never
+       crosses itself. */
+    const corners = 3 + Math.floor(rnd(k * 59.3 + 16) * 3);
+    const long = size * (0.85 + rnd(k * 61.7 + 17) * 1.15);
+    const short = size * (0.16 + rnd(k * 67.1 + 18) * 0.42);
+    const axis = rnd(k * 11.3 + 4) * Math.PI * 2;
+    const cosA = Math.cos(axis);
+    const sinA = Math.sin(axis);
+
+    const points = Array.from({ length: corners }, (_, i) => {
+      const a =
+        ((i + 0.5 + (rnd(k * 71 + i * 7 + 3) - 0.5) * 0.9) / corners) *
+        Math.PI *
+        2;
+      const bite = 0.55 + rnd(k * 73 + i * 11 + 5) * 0.65;
+      const px = Math.cos(a) * long * bite;
+      const py = Math.sin(a) * short * bite;
+      return {
+        x: cx + px * cosA - py * sinA,
+        y: cy + px * sinA + py * cosA,
+      };
+    });
 
     const pull = 0.35 + rnd(k * 19.3 + 7) * 0.4;
 
