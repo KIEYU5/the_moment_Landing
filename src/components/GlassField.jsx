@@ -1,215 +1,218 @@
 import { useId } from "react";
 import useInView from "../hooks/useInView";
-import { rnd } from "../lib/facets";
 import { MARK, RING_R, RING_X, RING_Y } from "../lib/mark";
 
-/* One logo, laid across the whole hero at size, and a field of glass lying
-   on top of it. Every shard clips the same image, so no shard carries a logo
-   of its own — the mark only exists in what the pieces hold between them.
+/* A sheet of glass with a hole punched through the middle of it.
 
-   The clip travels with the shard: a transform on the group moves the
-   clip-path with the content, so each fragment keeps its own slice of the
-   image as it is thrown. */
+   Earlier versions scattered separate splinters around the frame, which is
+   why it read as confetti: real breakage leaves the plate intact and the
+   pieces still touching, and it is the hairline between two pieces that says
+   glass. So the border is tiled edge to edge — every piece shares its sides
+   with its neighbours — and the only empty space is the crack itself and the
+   hole in the centre.
+
+   Nothing here is random. The fracture is a written list of rays: an angle
+   out from the centre, how far the hole reaches along it, and whether that
+   wedge is broken again part way out. */
 const HERO_W = 1440;
 const HERO_H = 810;
 const CENTRE_X = 720;
 const CENTRE_Y = 405;
 
-/* The mark is scaled until its ring reaches the left and right edges, where
-   the glass is. The band follows the frame and the ring is a circle, so they
-   only meet at the sides — the visible arcs are the two the frame crops. */
-const RING_ON_SCREEN = 720;
-const MARK_SCALE = RING_ON_SCREEN / RING_R;
-const MARK_TRANSFORM = `translate(${(CENTRE_X - MARK_SCALE * RING_X).toFixed(2)} ${(CENTRE_Y - MARK_SCALE * RING_Y).toFixed(2)}) scale(${MARK_SCALE.toFixed(4)})`;
+const HOLE_RX = 430;
+const HOLE_RY = 250;
+const CRACK = 3; // width of the gap left between two pieces
 
-/* Shards hug the frame rather than ringing the centre. Sampling an angle at
-   random clumps them — eighty pieces over a full turn leaves holes big enough
-   to see, which is what made the field look patchy. Walking the perimeter in
-   even steps instead guarantees the band closes all the way round, and the
-   depth curve keeps most of them near the edge. */
-/* Density comes from count, not size. Bigger shards crowd the band inward
-   until the pieces meet in the middle and the hero fills in; more of them at
-   the same size thickens the border and leaves the centre alone. */
-const COUNT = 200;
-const FLOATERS = 7; // a few chips adrift in the empty middle
-const OVERHANG = 70; // the border sits outside the frame, so shards get cut
-/* Capped tight. Rejection pushes pieces inward — when a shallow spot is
-   taken the next attempt draws a new depth — so a deep band lets the retries
-   wander into the middle and the ramp flattens out. */
-const BAND = 240; // how far in the deepest shard can sit
-const DEPTH_BIAS = 2.4; // >1 crowds them towards the edge
-const GAP = 5; // clear air kept between neighbouring pieces
-const MAX_TRIES = 16; // attempts to fit one shard before giving up on it
+/* angle in degrees · hole reach along it · where it breaks again (0 = whole)
 
-const EDGE_X0 = -OVERHANG;
-const EDGE_Y0 = -OVERHANG;
-const EDGE_X1 = HERO_W + OVERHANG;
-const EDGE_Y1 = HERO_H + OVERHANG;
+   The angles must run exactly once around. Listing them from -90 to 347 is
+   437 degrees: the last wedge then folds backwards over the first and swallows
+   the hole, which is not obvious from the numbers but very obvious on screen. */
+const RAYS = [
+  { a: -90, r: 0.86, split: 0.42 },
+  { a: -79, r: 1.12, split: 0 },
+  { a: -68, r: 0.94, split: 0.55 },
+  { a: -56, r: 1.24, split: 0 },
+  { a: -45, r: 0.9, split: 0.38 },
+  { a: -34, r: 1.06, split: 0 },
+  { a: -22, r: 0.83, split: 0.5 },
+  { a: -11, r: 1.18, split: 0 },
+  { a: 0, r: 0.97, split: 0.44 },
+  { a: 12, r: 1.28, split: 0 },
+  { a: 23, r: 0.88, split: 0.36 },
+  { a: 34, r: 1.09, split: 0 },
+  { a: 46, r: 0.92, split: 0.52 },
+  { a: 57, r: 1.21, split: 0 },
+  { a: 68, r: 0.85, split: 0.4 },
+  { a: 80, r: 1.14, split: 0 },
+  { a: 91, r: 0.96, split: 0.47 },
+  { a: 102, r: 1.26, split: 0 },
+  { a: 114, r: 0.89, split: 0.34 },
+  { a: 125, r: 1.04, split: 0 },
+  { a: 136, r: 0.93, split: 0.56 },
+  { a: 148, r: 1.19, split: 0 },
+  { a: 159, r: 0.84, split: 0.43 },
+  { a: 170, r: 1.11, split: 0 },
+  { a: 182, r: 0.98, split: 0.5 },
+  { a: 193, r: 1.23, split: 0 },
+  { a: 204, r: 0.87, split: 0.37 },
+  { a: 216, r: 1.16, split: 0 },
+  { a: 227, r: 0.95, split: 0.53 },
+  { a: 238, r: 1.07, split: 0 },
+  { a: 250, r: 0.91, split: 0.41 },
+  { a: 261, r: 1.25, split: 0 },
+];
 
-/* A point at t around the frame, with the inward normal. */
-function onPerimeter(t) {
-  const w = EDGE_X1 - EDGE_X0;
-  const h = EDGE_Y1 - EDGE_Y0;
-  let d = t * (2 * (w + h));
-  if (d < w) return { x: EDGE_X0 + d, y: EDGE_Y0, nx: 0, ny: 1 };
-  d -= w;
-  if (d < h) return { x: EDGE_X1, y: EDGE_Y0 + d, nx: -1, ny: 0 };
-  d -= h;
-  if (d < w) return { x: EDGE_X1 - d, y: EDGE_Y1, nx: 0, ny: -1 };
-  d -= w;
-  return { x: EDGE_X0, y: EDGE_Y1 - d, nx: 1, ny: 0 };
-}
+const rad = (deg) => (deg * Math.PI) / 180;
 
-/* Convex hull so the overlap test below is valid — separating axes only
-   decide it for convex shapes, and jittering a vertex inward can leave the
-   outline dented. */
-function hull(pts) {
-  const p = [...pts].sort((a, b) => a.x - b.x || a.y - b.y);
-  if (p.length < 3) return p;
-  const cross = (o, a, b) =>
-    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-  const half = (list) => {
-    const out = [];
-    for (const q of list) {
-      while (out.length >= 2 && cross(out[out.length - 2], out[out.length - 1], q) <= 0)
-        out.pop();
-      out.push(q);
-    }
-    return out;
-  };
-  const lower = half(p);
-  const upper = half([...p].reverse());
-  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
-}
-
-function axesOf(poly) {
-  return poly.map((a, i) => {
-    const b = poly[(i + 1) % poly.length];
-    const ex = b.x - a.x;
-    const ey = b.y - a.y;
-    const len = Math.hypot(ex, ey) || 1;
-    return { x: -ey / len, y: ex / len };
-  });
-}
-
-/* Separating-axis test with a gap: if any axis leaves GAP of clear air
-   between the two outlines they are apart, and one such axis is enough. */
-function apart(a, b, gap) {
-  for (const ax of [...axesOf(a), ...axesOf(b)]) {
-    let aMin = Infinity;
-    let aMax = -Infinity;
-    let bMin = Infinity;
-    let bMax = -Infinity;
-    for (const p of a) {
-      const d = p.x * ax.x + p.y * ax.y;
-      if (d < aMin) aMin = d;
-      if (d > aMax) aMax = d;
-    }
-    for (const p of b) {
-      const d = p.x * ax.x + p.y * ax.y;
-      if (d < bMin) bMin = d;
-      if (d > bMax) bMax = d;
-    }
-    if (aMax + gap < bMin || bMax + gap < aMin) return true;
-  }
-  return false;
-}
-
-function candidate(k, attempt, adrift) {
-  const s = (n) => rnd(k * 101.7 + attempt * 7.3 + n);
-
-  const t = (k + 0.5 + (rnd(k * 3.7 + 1) - 0.5) * 0.85) / COUNT;
-  const edge = onPerimeter(((t % 1) + 1) % 1);
-  const depth = BAND * Math.pow(s(2), DEPTH_BIAS);
-
-  const cx = adrift ? 380 + s(21) * (HERO_W - 760) : edge.x + edge.nx * depth;
-  const cy = adrift ? 250 + s(22) * (HERO_H - 500) : edge.y + edge.ny * depth;
-
-  /* Each retry looks for a smaller piece, so late arrivals settle into the
-     gaps left over instead of failing outright. */
-  const shrink = Math.pow(0.93, attempt);
-  const size = (adrift ? 15 + s(3) * 24 : 44 + s(3) * 106) * shrink;
-
-  /* Three to five corners, stretched along one axis and knocked off the
-     ellipse per vertex: slivers, wedges and chipped plates rather than one
-     triangle repeated. Angles are generated in order so the outline never
-     crosses itself. */
-  const corners = 3 + Math.floor(s(16) * 3);
-  const long = size * (0.8 + s(17) * 0.9);
-  const short = size * (0.16 + s(18) * 0.38);
-  const axis = s(4) * Math.PI * 2;
-  const cosA = Math.cos(axis);
-  const sinA = Math.sin(axis);
-
-  const points = Array.from({ length: corners }, (_, i) => {
-    const a = ((i + 0.5 + (s(71 + i * 7) - 0.5) * 0.9) / corners) * Math.PI * 2;
-    const bite = 0.55 + s(73 + i * 11) * 0.65;
-    const px = Math.cos(a) * long * bite;
-    const py = Math.sin(a) * short * bite;
-    return { x: cx + px * cosA - py * sinA, y: cy + px * sinA + py * cosA };
-  });
-
-  const shape = hull(points);
-  const reach = Math.max(...shape.map((p) => Math.hypot(p.x - cx, p.y - cy)));
-  const pull = 0.35 + s(7) * 0.4;
-
+function holePoint(ray) {
   return {
-    shape,
-    cx,
-    cy,
-    reach,
-    edge: 0.28 + s(19) * 0.4,
-    rim: 1 + s(23) * 1.4,
-    flat: 0.12 + s(9) * 0.2,
-    tint: 0.5 + s(14) * 0.4,
-    tx: -(cx - CENTRE_X) * pull,
-    ty: -(cy - CENTRE_Y) * pull,
-    rot: (s(10) - 0.5) * 70,
-    scale: 0.35 + s(11) * 0.35,
-    duration: 900 + s(12) * 700,
-    delay: s(13) * 420,
+    x: CENTRE_X + Math.cos(rad(ray.a)) * HOLE_RX * ray.r,
+    y: CENTRE_Y + Math.sin(rad(ray.a)) * HOLE_RY * ray.r,
   };
 }
 
-function buildShards() {
-  const placed = [];
-
-  for (let k = 0; k < COUNT + FLOATERS; k++) {
-    for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
-      const c = candidate(k, attempt, k >= COUNT);
-      /* Bounding circles first — most pairs are nowhere near each other and
-         the separating-axis test is far too expensive to run on all of them. */
-      const clash = placed.some(
-        (p) =>
-          Math.hypot(p.cx - c.cx, p.cy - c.cy) < p.reach + c.reach + GAP &&
-          !apart(p.shape, c.shape, GAP),
-      );
-      if (!clash) {
-        placed.push(c);
-        break;
-      }
-    }
-  }
-
-  const fmt = (pts) =>
-    pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-
-  return placed.map((s) => ({
-    ...s,
-    points: fmt(s.shape),
-    /* The same outline pulled in towards the centroid. Drawn as a second
-       hairline it reads as the bevel on a thick piece of glass, which is
-       most of what separates a shard from a translucent blob. */
-    inset: fmt(
-      s.shape.map((p) => ({
-        x: s.cx + (p.x - s.cx) * 0.76,
-        y: s.cy + (p.y - s.cy) * 0.76,
-      })),
-    ),
-  }));
+/* Where a ray from the centre leaves the frame. */
+function framePoint(deg) {
+  const dx = Math.cos(rad(deg));
+  const dy = Math.sin(rad(deg));
+  const tx = dx > 0 ? CENTRE_X / dx : dx < 0 ? -CENTRE_X / dx : Infinity;
+  const ty = dy > 0 ? (HERO_H - CENTRE_Y) / dy : dy < 0 ? -CENTRE_Y / dy : Infinity;
+  const t = Math.min(Math.abs(tx), Math.abs(ty));
+  return { x: CENTRE_X + dx * t, y: CENTRE_Y + dy * t };
 }
 
-const SHARDS = buildShards();
+/* Position of a point on the frame as 0–4, running clockwise from the middle
+   of the right edge, so corners fall on the whole numbers. */
+function perimeterAt(p) {
+  if (p.x >= HERO_W - 0.5) return p.y / HERO_H;
+  if (p.y >= HERO_H - 0.5) return 1 + (HERO_W - p.x) / HERO_W;
+  if (p.x <= 0.5) return 2 + (HERO_H - p.y) / HERO_H;
+  return 3 + p.x / HERO_W;
+}
+
+const CORNERS = [
+  { x: HERO_W, y: HERO_H },
+  { x: 0, y: HERO_H },
+  { x: 0, y: 0 },
+  { x: HERO_W, y: 0 },
+];
+
+/* The frame corners a wedge has to fold around on its way from one ray to
+   the next; without them the outer edge cuts the corner off. */
+function cornersBetween(from, to) {
+  const out = [];
+  let end = to;
+  if (end < from) end += 4;
+  for (let c = Math.ceil(from); c < end; c++) out.push(CORNERS[c % 4]);
+  return out;
+}
+
+const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+
+function centroid(pts) {
+  return {
+    x: pts.reduce((s, p) => s + p.x, 0) / pts.length,
+    y: pts.reduce((s, p) => s + p.y, 0) / pts.length,
+  };
+}
+
+function area(pts) {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const q = pts[(i + 1) % pts.length];
+    a += p.x * q.y - q.x * p.y;
+  }
+  return Math.abs(a) / 2;
+}
+
+/* Pull every edge in by half a crack, so the gap between two neighbours ends
+   up one crack wide. Vertices move along the bisector, which keeps sharp
+   corners sharp instead of rounding them off. */
+function inset(pts, d) {
+  const n = pts.length;
+  const shift = (sign) =>
+    pts.map((p, i) => {
+      const prev = pts[(i - 1 + n) % n];
+      const next = pts[(i + 1) % n];
+      const e1 = { x: p.x - prev.x, y: p.y - prev.y };
+      const e2 = { x: next.x - p.x, y: next.y - p.y };
+      const l1 = Math.hypot(e1.x, e1.y) || 1;
+      const l2 = Math.hypot(e2.x, e2.y) || 1;
+      const n1 = { x: (-e1.y / l1) * sign, y: (e1.x / l1) * sign };
+      const n2 = { x: (-e2.y / l2) * sign, y: (e2.x / l2) * sign };
+      let bx = n1.x + n2.x;
+      let by = n1.y + n2.y;
+      const bl = Math.hypot(bx, by);
+      if (bl < 1e-6) return { ...p };
+      bx /= bl;
+      by /= bl;
+      // how far along the bisector to reach a perpendicular distance of d
+      const cos = Math.max(0.3, n1.x * bx + n1.y * by);
+      return { x: p.x + (bx * d) / cos, y: p.y + (by * d) / cos };
+    });
+
+  const a = shift(1);
+  return area(a) < area(pts) ? a : shift(-1);
+}
+
+function buildPieces() {
+  const pieces = [];
+
+  RAYS.forEach((ray, i) => {
+    const next = RAYS[(i + 1) % RAYS.length];
+    const h0 = holePoint(ray);
+    const h1 = holePoint(next);
+    const f0 = framePoint(ray.a);
+    const f1 = framePoint(next.a);
+    const bridge = cornersBetween(perimeterAt(f0), perimeterAt(f1));
+
+    /* Outer edge runs f0 → corners → f1, so coming back it is reversed. */
+    const outer = [f1, ...bridge.slice().reverse()];
+
+    if (ray.split > 0) {
+      const m0 = lerp(h0, f0, ray.split);
+      const m1 = lerp(h1, f1, ray.split);
+      pieces.push([h0, h1, m1, m0]);
+      pieces.push([m0, m1, ...outer, f0]);
+    } else {
+      pieces.push([h0, h1, ...outer, f0]);
+    }
+  });
+
+  return pieces.map((pts, k) => {
+    const c = centroid(pts);
+    const cut = inset(pts, CRACK / 2);
+    const bevel = inset(cut, 7);
+    /* Thrown straight out along the line it broke on, turned a little, with
+       the swing set by index rather than chance. */
+    const pull = 0.3 + ((k * 7) % 5) * 0.07;
+
+    return {
+      points: cut.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
+      bevel: bevel.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
+      cx: c.x,
+      cy: c.y,
+      face: 0.05 + ((k * 3) % 4) * 0.018,
+      edge: 0.3 + ((k * 5) % 6) * 0.05,
+      rim: 1 + ((k * 11) % 3) * 0.5,
+      flat: 0.12 + ((k * 13) % 5) * 0.035,
+      tint: 0.5 + ((k * 17) % 6) * 0.06,
+      tx: -(c.x - CENTRE_X) * pull,
+      ty: -(c.y - CENTRE_Y) * pull,
+      rot: (((k * 19) % 9) - 4) * 5,
+      scale: 0.55 + ((k * 23) % 6) * 0.05,
+      duration: 900 + ((k * 29) % 8) * 90,
+      delay: ((k * 31) % 11) * 46,
+    };
+  });
+}
+
+const PIECES = buildPieces();
+
+const MARK_SCALE = 720 / RING_R;
+const MARK_TRANSFORM = `translate(${(CENTRE_X - MARK_SCALE * RING_X).toFixed(2)} ${(CENTRE_Y - MARK_SCALE * RING_Y).toFixed(2)}) scale(${MARK_SCALE.toFixed(4)})`;
 
 export default function GlassField({ delay = 0, className = "" }) {
   const [ref, inView] = useInView({ threshold: 0, rootMargin: "0px" });
@@ -231,7 +234,6 @@ export default function GlassField({ delay = 0, className = "" }) {
           <path d={MARK} />
         </g>
 
-        {/* The logo file's own gradient, kept as authored and scaled with it. */}
         <radialGradient
           id={tintId}
           cx="0"
@@ -245,64 +247,61 @@ export default function GlassField({ delay = 0, className = "" }) {
           <stop offset="1" stopColor="#6A76E9" stopOpacity="0" />
         </radialGradient>
 
-        {SHARDS.map((shard, i) => (
+        {PIECES.map((piece, i) => (
           <clipPath key={i} id={`${markId}-c${i}`}>
-            <polygon points={shard.points} />
+            <polygon points={piece.points} />
           </clipPath>
         ))}
       </defs>
 
-      {SHARDS.map((shard, i) => (
+      {PIECES.map((piece, i) => (
         <g
           key={i}
           className={`glass-fleck${inView ? " is-in" : ""}`}
           style={{
-            transformOrigin: `${shard.cx.toFixed(1)}px ${shard.cy.toFixed(1)}px`,
+            transformOrigin: `${piece.cx.toFixed(1)}px ${piece.cy.toFixed(1)}px`,
             transitionDelay: inView
-              ? `${(delay + shard.delay).toFixed(0)}ms`
+              ? `${(delay + piece.delay).toFixed(0)}ms`
               : "0ms",
-            "--kx": `${shard.tx.toFixed(1)}px`,
-            "--ky": `${shard.ty.toFixed(1)}px`,
-            "--kr": `${shard.rot.toFixed(1)}deg`,
-            "--ks": shard.scale.toFixed(3),
-            "--kd": inView ? `${shard.duration.toFixed(0)}ms` : "0ms",
+            "--kx": `${piece.tx.toFixed(1)}px`,
+            "--ky": `${piece.ty.toFixed(1)}px`,
+            "--kr": `${piece.rot.toFixed(1)}deg`,
+            "--ks": piece.scale.toFixed(3),
+            "--kd": inView ? `${piece.duration.toFixed(0)}ms` : "0ms",
           }}
         >
-          {/* Body: the pane, then the slice of the logo this piece holds.
-              Only this part is clipped — the outlines below are drawn on the
-              shard's own edge and would be halved by their own clip. */}
           <g clipPath={`url(#${markId}-c${i})`}>
-            <polygon points={shard.points} fill="#4a80f8" opacity="0.05" />
-            {/* Flat underlay first: the file's gradient is transparent at
-                exactly the ring's radius, and the ring is the part the field
-                is built around. */}
+            <polygon
+              points={piece.points}
+              fill="#4a80f8"
+              opacity={piece.face.toFixed(3)}
+            />
             <use
               href={`#${markId}`}
               fill="#4a80f8"
-              opacity={shard.flat.toFixed(3)}
+              opacity={piece.flat.toFixed(3)}
             />
             <use
               href={`#${markId}`}
               fill={`url(#${tintId})`}
-              opacity={shard.tint.toFixed(3)}
+              opacity={piece.tint.toFixed(3)}
             />
           </g>
 
-          {/* Cut edge, then the bevel behind it. */}
           <polygon
-            points={shard.points}
+            points={piece.points}
             fill="none"
             stroke="#4a80f8"
-            strokeOpacity={shard.edge.toFixed(3)}
-            strokeWidth={shard.rim.toFixed(2)}
+            strokeOpacity={piece.edge.toFixed(3)}
+            strokeWidth={piece.rim.toFixed(2)}
             strokeLinejoin="round"
           />
           <polygon
-            points={shard.inset}
+            points={piece.bevel}
             fill="none"
             stroke="#4a80f8"
-            strokeOpacity={(shard.edge * 0.45).toFixed(3)}
-            strokeWidth={(shard.rim * 0.7).toFixed(2)}
+            strokeOpacity={(piece.edge * 0.35).toFixed(3)}
+            strokeWidth={(piece.rim * 0.6).toFixed(2)}
             strokeLinejoin="round"
           />
         </g>
