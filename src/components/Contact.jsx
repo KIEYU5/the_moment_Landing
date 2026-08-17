@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DotField from "./DotField";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
 import { BEAT, GROUP, beat } from "../lib/timing";
@@ -32,8 +33,9 @@ export default function Contact() {
     "focus:border-[#4a80f8] focus:bg-white placeholder:text-[#292b2f] placeholder:opacity-40";
 
   return (
-    <section id="contact" className="relative bg-white w-full">
-      <div className="px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
+    <section id="contact" className="relative bg-white w-full overflow-hidden">
+      <DotField bare on />
+      <div className="relative px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
         <Faceted as="h2" className="font-bold text-[#292b2f] text-display">
           Contact <span className="text-[#4a80f8]">Us</span>
         </Faceted>

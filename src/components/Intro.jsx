@@ -1,3 +1,4 @@
+import DotField from "./DotField";
 import Faceted from "./Faceted";
 import { BEAT, GROUP, beat } from "../lib/timing";
 
@@ -13,8 +14,11 @@ const PHILOSOPHY = [
 
 export default function Intro() {
   return (
-    <section id="about" className="relative bg-white w-full">
-      <div className="px-gutter py-section">
+    <section id="about" className="relative bg-white w-full overflow-hidden">
+      <DotField bare on />
+      {/* Positioned, so it sits above the canvas — an absolutely positioned
+          element paints over in-flow content whatever the DOM order. */}
+      <div className="relative px-gutter py-section">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-block">
           <div>
             <Faceted as="p" className="font-bold text-[#292b2f] text-lead">

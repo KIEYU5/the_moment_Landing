@@ -21,7 +21,14 @@ import { useEffect, useRef } from "react";
 
    Nothing is anchored to where the pointer is, only to where it has been,
    which is what lets the field go quiet on its own: a still hand lays no
-   stamps, the last ones run out, and the turbulence is all that is left. */
+   stamps, the last ones run out, and the turbulence is all that is left.
+
+   `bare` drops the lattice and keeps the pointer: no turbulence, and a dot
+   is drawn only where the stroke or a front actually reaches it. That is
+   the form the rest of the page takes — the churning field belongs to the
+   hero, but the stroke should follow the pointer down the whole page. It is
+   also most of the cost, so a bare field skips its frame entirely while
+   nothing is live. */
 
 const SPACING = 24;
 
@@ -225,7 +232,7 @@ function makeHalo() {
   return sprite;
 }
 
-export default function DotField({ on = false, className = "" }) {
+export default function DotField({ on = false, bare = false, className = "" }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -254,7 +261,12 @@ export default function DotField({ on = false, className = "" }) {
        quick drag can have seventy stamps alive at once against eighteen
        hundred dots. */
     let paint = new Float32Array(0);
+    let blank = false;
     let dirty = true;
+    /* Now that fields run the length of the page, one drawing off screen is
+       a whole frame budget spent on nothing — the hero's turbulence alone
+       was costing 3.9ms a frame from three sections away. */
+    let onScreen = true;
     let raf = 0;
     let rings = [];
     let trail = [];
@@ -285,6 +297,7 @@ export default function DotField({ on = false, className = "" }) {
     };
 
     const move = (e) => {
+      if (!onScreen) return;
       const box = canvas.getBoundingClientRect();
       const nx = e.clientX - box.left;
       const ny = e.clientY - box.top;
@@ -359,22 +372,16 @@ export default function DotField({ on = false, className = "" }) {
         for (let col = 0; col <= cols; col++) {
           const x = half + col * SPACING;
 
-          let n = TURB_FLOOR + turbulence(x, y, t) * TURB_SPAN;
-
           /* Rings take the strongest rather than the sum: two crests
              crossing should not add up to a dot larger than either front
              ever makes on its own. */
           let wake = 0;
-          for (const r of rings) {
-            const age = t - r.born;
-            const gap = Math.hypot(x - r.x, y - r.y) - age * RING_SPEED;
-            const e = ringAt(gap, age) * r.at;
+          for (const ring of rings) {
+            const age = t - ring.born;
+            const gap = Math.hypot(x - ring.x, y - ring.y) - age * RING_SPEED;
+            const e = ringAt(gap, age) * ring.at;
             if (e > wake) wake = e;
           }
-          n += RING_AMP * wake;
-
-          const c = Math.min(1, Math.max(0, n));
-          const s = c * c * (3 - 2 * c);
 
           /* Both the stroke and the front carry the brand colour, and they
              are the only two things that do — everything else in the field
@@ -382,12 +389,22 @@ export default function DotField({ on = false, className = "" }) {
           const stroke = paint[row * stride + col];
           const lit = stroke > wake ? stroke : wake;
 
-          /* Override, not addition: under either of them a dot is this size
-             whatever the turbulence was doing there. */
-          let r = R_MIN + s * (R_MAX - R_MIN);
-          let a = A_MIN + s * (A_MAX - A_MIN);
-          r = Math.max(r, R_RING * wake, R_TRAIL * stroke);
-          a = Math.max(a, A_TRAIL * lit);
+          if (bare && lit < 0.012) continue;
+
+          let r = R_RING * wake;
+          let a = A_TRAIL * lit;
+          if (stroke > 0) r = Math.max(r, R_TRAIL * stroke);
+
+          if (!bare) {
+            const n =
+              TURB_FLOOR + turbulence(x, y, t) * TURB_SPAN + RING_AMP * wake;
+            const c = Math.min(1, Math.max(0, n));
+            const s = c * c * (3 - 2 * c);
+            /* Override, not addition: under either of them a dot is this
+               size whatever the turbulence was doing there. */
+            r = Math.max(r, R_MIN + s * (R_MAX - R_MIN));
+            a = Math.max(a, A_MIN + s * (A_MAX - A_MIN));
+          }
 
           if (lit > HALO_FROM) {
             const g = (lit - HALO_FROM) / (1 - HALO_FROM);
@@ -410,6 +427,7 @@ export default function DotField({ on = false, className = "" }) {
 
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
+      if (!onScreen) return;
       const t = (now - start) / 1000;
 
       /* Reduced motion holds the turbulence still, lays no stroke and sheds
@@ -437,6 +455,18 @@ export default function DotField({ on = false, className = "" }) {
         trail = trail.filter((s) => t - s.born <= TRAIL_LIFE);
       }
 
+      /* A bare field has nothing of its own to animate, so with no stroke
+         and no front it has no frame to draw — one clear on the way down,
+         then it costs nothing until the pointer comes back. */
+      if (bare && !trail.length && !rings.length) {
+        if (!blank) {
+          ctx.clearRect(0, 0, w, h);
+          blank = true;
+        }
+        return;
+      }
+      blank = false;
+
       draw(t);
     };
 
@@ -445,14 +475,25 @@ export default function DotField({ on = false, className = "" }) {
 
     const observer = new ResizeObserver(size);
     observer.observe(canvas);
+    /* The margin keeps a field awake just before it arrives, so a stroke
+       started off the edge is already on it rather than beginning at the
+       fold. */
+    const visible = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+      },
+      { rootMargin: "160px" },
+    );
+    visible.observe(canvas);
     window.addEventListener("pointermove", move, { passive: true });
 
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
+      visible.disconnect();
       window.removeEventListener("pointermove", move);
     };
-  }, [on]);
+  }, [on, bare]);
 
   return (
     <canvas

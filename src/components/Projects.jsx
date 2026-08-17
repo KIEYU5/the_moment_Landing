@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DotField from "./DotField";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
 import { BEAT, GROUP, beat } from "../lib/timing";
@@ -42,8 +43,9 @@ export default function Projects() {
   const [open, setOpen] = useState(0);
 
   return (
-    <section id="work" className="relative bg-white w-full">
-      <div className="px-gutter py-section">
+    <section id="work" className="relative bg-white w-full overflow-hidden">
+      <DotField bare on />
+      <div className="relative px-gutter py-section">
         <Faceted
           as="h2"
           className="font-bold text-[#292b2f] text-display mb-block"

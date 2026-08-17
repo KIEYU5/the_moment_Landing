@@ -1,3 +1,4 @@
+import DotField from "./DotField";
 import Faceted from "./Faceted";
 import { beat } from "../lib/timing";
 
@@ -31,7 +32,8 @@ export default function Values() {
       id="service"
       className="relative bg-white w-full overflow-hidden"
     >
-      <div className="px-gutter py-section">
+      <DotField bare on />
+      <div className="relative px-gutter py-section">
         <div className="flex flex-col gap-block">
           {VALUES.map((v) => (
             <div
