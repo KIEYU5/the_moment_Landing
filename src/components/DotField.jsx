@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
    only brighten and dim as a whole. Positions and spacing stay fixed; what
    changes per frame is each dot's radius, alpha and colour.
 
-   Three things drive a dot:
+   Two things drive a dot:
 
      turbulence  domain-warped ridged noise, which is what gives the field
                  its fine irregular grain. Crossed sine waves cannot do this
@@ -16,19 +16,17 @@ import { useEffect, useRef } from "react";
      stroke      the pointer paints: moving lays stamps along the path it
                  took, each opening the dots around it to full size and the
                  brand blue, then closing them again.
-     rings       coming to a stop sheds a ring from where it stopped, in the
-                 same brand blue, which travels out and thins on its own.
 
    Nothing is anchored to where the pointer is, only to where it has been,
    which is what lets the field go quiet on its own: a still hand lays no
    stamps, the last ones run out, and the turbulence is all that is left.
 
    `bare` drops the lattice and keeps the pointer: no turbulence, and a dot
-   is drawn only where the stroke or a front actually reaches it. That is
-   the form the rest of the page takes — the churning field belongs to the
-   hero, but the stroke should follow the pointer down the whole page. It is
-   also most of the cost, so a bare field skips its frame entirely while
-   nothing is live. */
+   is drawn only where the stroke actually reaches it. That is the form the
+   rest of the page takes — the churning field belongs to the hero, but the
+   stroke should follow the pointer down the whole page. It is also most of
+   the cost, so a bare field skips its frame entirely while nothing is
+   live. */
 
 const SPACING = 24;
 
@@ -108,8 +106,8 @@ const TURB_MID = 0.66;
    than half the field was pinned at the ceiling, which flattens every crest
    into one plateau and loses the shape inside it. */
 const TURB_GAIN = 1.75;
-/* The turbulence takes nearly the whole swell. Rings and the pointer are
-   additive on top and clamp, so they do not need headroom reserved. */
+/* The turbulence takes nearly the whole swell. The stroke overrides size
+   outright rather than adding to it, so it needs no headroom reserved. */
 const TURB_FLOOR = 0.02;
 const TURB_SPAN = 0.92;
 
@@ -120,56 +118,6 @@ function turbulence(x, y, t) {
   const wy = fbm(nx, ny, t, 11.3, false) - 0.5;
   const v = fbm(nx + WARP * wx, ny + WARP * wy, t, 3.7, true);
   return Math.min(1, Math.max(0, (v - TURB_MID) * TURB_GAIN + 0.5));
-}
-
-/* ---------- rings ---------- */
-
-/* A ring is shed when the pointer comes to rest, and only then — the field
-   is turbulence alone until someone moves through it. It leaves the stopping
-   point at full strength, travels out at RING_SPEED and thins as it goes.
-
-   The crest is deliberately lopsided. A dot should sit untouched until the
-   front is on it, snap open at once, then subside as the ring carries on to
-   the dots outside it — so the leading side is tight and the trailing side
-   long. Symmetric, a dot swells and shrinks in place over the same span,
-   which reads as breathing rather than as something passing through.
-
-   gap is the dot's distance minus the front's radius: positive means the
-   front has not reached it yet, negative means it has already gone by. */
-const RING_LEAD = 20;
-const RING_TRAIL = 92;
-const RING_SPEED = 520;
-const RING_AMP = 0.95;
-const RING_MAX = 4;
-/* The front holds its strength while it travels and only gives out at the
-   end of its reach. Decaying from the moment of release — the obvious
-   reading of a wave losing energy — put the crest below the turbulence it
-   was crossing by the time it was 350px out, so there was nothing left to
-   watch travel. HOLD is full strength, LIFE is gone.
-
-   Both are shorter than they were because the front is faster: at 520px/s
-   it clears a 1280px screen from the middle in well under two seconds, and
-   holding it alive past that is per-dot work spent on a ring nobody can
-   see. */
-const RING_HOLD = 1.2;
-const RING_LIFE = 2.2;
-/* Rings drive size directly as well, not only the swell, or the crest can
-   never be bigger than the turbulence already is and there is no snap in it.
-   Above the stroke's own: the front is the larger event, and it is the only
-   thing left once the hand has stopped. */
-const R_RING = 8.4;
-
-/* Movement, then stillness. The pointer must have travelled STOP_TRAVEL
-   since the last ring and then held for STOP_AFTER, so a ring answers a
-   gesture ending rather than the cursor merely existing. */
-const STOP_AFTER = 0.11;
-const STOP_TRAVEL = 14;
-
-function ringAt(gap, age) {
-  const width = gap > 0 ? RING_LEAD : RING_TRAIL;
-  const fade =
-    age <= RING_HOLD ? 1 : 1 - (age - RING_HOLD) / (RING_LIFE - RING_HOLD);
-  return Math.exp(-(gap * gap) / (2 * width * width)) * Math.max(0, fade);
 }
 
 /* ---------- the stroke ---------- */
@@ -249,8 +197,6 @@ export default function DotField({ on = false, bare = false, className = "" }) {
 
     let w = 0;
     let h = 0;
-    let px = 0;
-    let py = 0;
     let cols = 0;
     let rows = 0;
     let stride = 0;
@@ -268,17 +214,12 @@ export default function DotField({ on = false, bare = false, className = "" }) {
        was costing 3.9ms a frame from three sections away. */
     let onScreen = true;
     let raf = 0;
-    let rings = [];
     let trail = [];
-    /* Travel accumulated since the last ring, where the last stamp landed,
-       and when the pointer was last seen — together these are what "came to
-       a stop" means. */
-    let travel = 0;
+    /* Where the last stamp landed, so the next one is placed by distance
+       travelled rather than by event. */
     let lastX = 0;
     let lastY = 0;
     let seeded = false;
-    let lastMove = -Infinity;
-    let armed = false;
 
     const size = () => {
       const box = canvas.getBoundingClientRect();
@@ -301,9 +242,6 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       const box = canvas.getBoundingClientRect();
       const nx = e.clientX - box.left;
       const ny = e.clientY - box.top;
-      px = nx;
-      py = ny;
-      lastMove = performance.now();
 
       if (!seeded) {
         lastX = nx;
@@ -313,8 +251,6 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       }
 
       const step = Math.hypot(nx - lastX, ny - lastY);
-      travel += step;
-      if (travel >= STOP_TRAVEL) armed = true;
 
       /* Stamp along the segment, not at the event. Pointer events arrive far
          apart during a fast flick, and stamping only where they land leaves
@@ -372,36 +308,21 @@ export default function DotField({ on = false, bare = false, className = "" }) {
         for (let col = 0; col <= cols; col++) {
           const x = half + col * SPACING;
 
-          /* Rings take the strongest rather than the sum: two crests
-             crossing should not add up to a dot larger than either front
-             ever makes on its own. */
-          let wake = 0;
-          for (const ring of rings) {
-            const age = t - ring.born;
-            const gap = Math.hypot(x - ring.x, y - ring.y) - age * RING_SPEED;
-            const e = ringAt(gap, age) * ring.at;
-            if (e > wake) wake = e;
-          }
-
-          /* Both the stroke and the front carry the brand colour, and they
-             are the only two things that do — everything else in the field
-             stays the neutral grey. */
-          const stroke = paint[row * stride + col];
-          const lit = stroke > wake ? stroke : wake;
+          /* The stroke is the only thing that carries the brand colour;
+             everything else in the field stays the neutral grey. */
+          const lit = paint[row * stride + col];
 
           if (bare && lit < 0.012) continue;
 
-          let r = R_RING * wake;
+          let r = R_TRAIL * lit;
           let a = A_TRAIL * lit;
-          if (stroke > 0) r = Math.max(r, R_TRAIL * stroke);
 
           if (!bare) {
-            const n =
-              TURB_FLOOR + turbulence(x, y, t) * TURB_SPAN + RING_AMP * wake;
+            const n = TURB_FLOOR + turbulence(x, y, t) * TURB_SPAN;
             const c = Math.min(1, Math.max(0, n));
             const s = c * c * (3 - 2 * c);
-            /* Override, not addition: under either of them a dot is this
-               size whatever the turbulence was doing there. */
+            /* Override, not addition: under the stroke a dot is this size
+               whatever the turbulence was doing there. */
             r = Math.max(r, R_MIN + s * (R_MAX - R_MIN));
             a = Math.max(a, A_MIN + s * (A_MAX - A_MIN));
           }
@@ -430,9 +351,9 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       if (!onScreen) return;
       const t = (now - start) / 1000;
 
-      /* Reduced motion holds the turbulence still, lays no stroke and sheds
-         no rings, so the field is a static lattice and only repaints when
-         it has been resized. */
+      /* Reduced motion holds the turbulence still and lays no stroke, so the
+         field is a static lattice and only repaints when it has been
+         resized. */
       if (still) {
         if (!dirty) return;
         dirty = false;
@@ -440,25 +361,14 @@ export default function DotField({ on = false, bare = false, className = "" }) {
         return;
       }
 
-      /* The gesture has ended: it travelled far enough to count, and the
-         pointer has now been still long enough to mean it. */
-      if (armed && (now - lastMove) / 1000 >= STOP_AFTER) {
-        rings.push({ x: px, y: py, born: t, at: 1 });
-        if (rings.length > RING_MAX) rings.shift();
-        armed = false;
-        travel = 0;
-      }
-      if (rings.length && t - rings[0].born > RING_LIFE) {
-        rings = rings.filter((r) => t - r.born <= RING_LIFE);
-      }
       if (trail.length && t - trail[0].born > TRAIL_LIFE) {
         trail = trail.filter((s) => t - s.born <= TRAIL_LIFE);
       }
 
-      /* A bare field has nothing of its own to animate, so with no stroke
-         and no front it has no frame to draw — one clear on the way down,
-         then it costs nothing until the pointer comes back. */
-      if (bare && !trail.length && !rings.length) {
+      /* A bare field has nothing of its own to animate, so with no stroke on
+         it there is no frame to draw — one clear on the way down, then it
+         costs nothing until the pointer comes back. */
+      if (bare && !trail.length) {
         if (!blank) {
           ctx.clearRect(0, 0, w, h);
           blank = true;
