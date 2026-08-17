@@ -21,7 +21,12 @@ export default function Wordmark({ delay = 0, className = "" }) {
     >
       <defs>
         {LETTERS.map((d, i) => (
-          <path key={i} id={`${glyphsId}-g${i}`} d={d} fill="#292b2f" />
+          <path
+            key={i}
+            id={`${glyphsId}-g${i}`}
+            d={d}
+            fill="var(--hero-ink)"
+          />
         ))}
 
         {FACETS.map((facet, i) => (

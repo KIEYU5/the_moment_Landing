@@ -65,6 +65,78 @@ body {
   background: #ffffff;
 }
 
+/* ---------- hero: ink and paper trade places ----------
+   One animated variable drives both sides of the swap: the section paints its
+   background from it and the wordmark fills its letters from it, so they can
+   never disagree. Custom properties do not transition unless they are
+   registered, which is what @property is doing here — without it the colours
+   would jump. Durations must match INVERT_RUNS and DOTS_RUNS in lib/timing. */
+
+@property --hero-ink {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #292b2f;
+}
+
+@property --hero-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+.hero {
+  --hero-ink: #292b2f;
+  --hero-bg: #ffffff;
+  background-color: var(--hero-bg);
+  transition:
+    --hero-ink 900ms ease,
+    --hero-bg 900ms ease;
+}
+
+.hero.is-inverted {
+  --hero-ink: #ffffff;
+  --hero-bg: #292b2f;
+}
+
+/* ---------- pointer lattice ----------
+   Dots are a repeating background, so their positions and spacing are fixed
+   and nothing is drawn per dot. The mask is what follows the pointer: opaque
+   where it sits, gone by its outer edge, so the near dots read as lit and the
+   far ones fade out. Two custom properties change per frame, no elements. */
+
+.dot-field {
+  --mx: 50%;
+  --my: 50%;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 700ms ease;
+  background-image: radial-gradient(
+    circle,
+    #4a80f8 1.7px,
+    transparent 1.9px
+  );
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(
+    260px circle at var(--mx) var(--my),
+    #000 0%,
+    rgba(0, 0, 0, 0.5) 45%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(
+    260px circle at var(--mx) var(--my),
+    #000 0%,
+    rgba(0, 0, 0, 0.5) 45%,
+    transparent 72%
+  );
+}
+
+.dot-field.is-on {
+  opacity: 1;
+}
+
 /* ---------- marquee ---------- */
 
 @keyframes marquee-left {
