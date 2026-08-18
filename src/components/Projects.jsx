@@ -1,4 +1,7 @@
 import { useState } from "react";
+import egBanner from "../assets/EG_Banner.svg";
+import hgBanner from "../assets/HG_Banner.svg";
+import rgBanner from "../assets/RG_Banner.svg";
 import DotField from "./DotField";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
@@ -18,24 +21,37 @@ const PROJECTS = [
     label: "sub project hg",
     explain: "EXPLAIN",
     detail: "DETAIL — 상세 설명이 들어갈 자리입니다.",
+    banner: hgBanner,
   },
   {
     label: "sub project rg",
     explain: "EXPLAIN",
     detail: "DETAIL — 상세 설명이 들어갈 자리입니다.",
+    banner: rgBanner,
   },
   {
     label: "sub project eg",
     explain: "EXPLAIN",
     detail: "DETAIL — 상세 설명이 들어갈 자리입니다.",
+    banner: egBanner,
   },
 ];
 
-const OPEN_HEIGHT = "h-[420px] lg:h-[520px]";
+/* The banners are 3312x1440, so an open card is that ratio exactly and the
+   artwork lands uncropped. Height comes from container query units rather
+   than from the viewport: the card is inset by the section gutters and the
+   page may or may not have a scrollbar, so 100vw would be wrong by whatever
+   those add up to, while 100cqw is the card's own width. Shut stays a fixed
+   height, which is what lets the two interpolate.
+
+   Written out rather than built from a ratio constant: Tailwind scans the
+   source as text, so a class assembled by template literal is a class it
+   never sees. 2.3 is 3312/1440 exactly. */
+const OPEN_HEIGHT = "h-[calc(100cqw/2.3)]";
 const SHUT_HEIGHT = "h-[150px] lg:h-[170px]";
 
 const cardClass =
-  "flex flex-col items-start gap-3 bg-[#d9d9d9] p-6 sm:p-8 w-full " +
+  "relative flex flex-col items-start gap-3 bg-[#d9d9d9] p-6 sm:p-8 w-full " +
   "overflow-hidden cursor-pointer outline-none " +
   "transition-[height] duration-700 ease-out " +
   "focus-visible:ring-2 focus-visible:ring-[#4a80f8] focus-visible:ring-offset-2";
@@ -54,7 +70,8 @@ export default function Projects() {
           Our <span className="text-[#4a80f8]">Project</span>
         </Faceted>
 
-        <div className="flex flex-col gap-5">
+        {/* The container the cards measure their open height against. */}
+        <div className="@container flex flex-col gap-5">
           {PROJECTS.map((p, i) => {
             const isOpen = open === i;
             return (
@@ -69,6 +86,18 @@ export default function Projects() {
                   onClick={() => setOpen(i)}
                   className={`${cardClass} ${isOpen ? OPEN_HEIGHT : SHUT_HEIGHT}`}
                 >
+                  {p.banner ? (
+                    <img
+                      src={p.banner}
+                      alt=""
+                      aria-hidden
+                      /* object-cover is belt and braces: the card already
+                         carries the banner's own ratio, so there is nothing
+                         to crop unless a rounding error asks for it. */
+                      className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+                    />
+                  ) : null}
+
                   <Faceted
                     as="p"
                     delay={beat(i, GROUP)}
@@ -96,7 +125,7 @@ export default function Projects() {
                   {/* Left in the accessibility tree whether open or not, so
                       the detail is never something only a mouse can reach. */}
                   <p
-                    className={`font-normal text-[#555962] text-body max-w-[720px] transition-opacity duration-500 ease-out ${
+                    className={`relative font-normal text-[#555962] text-body max-w-[720px] transition-opacity duration-500 ease-out ${
                       isOpen ? "opacity-100" : "opacity-0"
                     }`}
                   >
