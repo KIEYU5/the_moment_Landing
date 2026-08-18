@@ -9,6 +9,11 @@
 @theme {
   --spacing-gutter: 48px;
   --spacing-section: clamp(96px, 10vw, 180px);
+  /* A seam is two section paddings: one section's bottom meeting the next
+     one's top. Named because the hero has no bottom padding to give, so the
+     first section after it has to carry the whole gap itself, and an
+     arbitrary calc() in a class does not survive Tailwind's parser. */
+  --spacing-seam: clamp(192px, 20vw, 360px);
   --spacing-block: clamp(48px, 6vw, 112px);
   --spacing-stack: clamp(20px, 2.2vw, 40px);
 }
