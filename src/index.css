@@ -89,8 +89,8 @@ body {
   --hero-bg: #ffffff;
   background-color: var(--hero-bg);
   transition:
-    --hero-ink 900ms ease,
-    --hero-bg 900ms ease;
+    --hero-ink 520ms ease,
+    --hero-bg 520ms ease;
 }
 
 .hero.is-inverted {
@@ -113,7 +113,7 @@ body {
   height: 100%;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 700ms ease;
+  transition: opacity 460ms ease;
 }
 
 .dot-field.is-on {

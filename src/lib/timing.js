@@ -16,8 +16,8 @@ export const beat = (i, from = 0) => from + i * BEAT;
    swap, and the dots fading up. Nothing reads a stylesheet at runtime, so
    they are written down in both places. */
 export const REVEAL_RUNS = 950;
-export const INVERT_RUNS = 900;
-export const DOTS_RUNS = 700;
+export const INVERT_RUNS = 520;
+export const DOTS_RUNS = 460;
 
 /* The hero is a chain, and every length in it is asked of whatever owns that
    length rather than estimated.
