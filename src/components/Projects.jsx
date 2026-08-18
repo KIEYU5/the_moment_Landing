@@ -14,38 +14,33 @@ const PROJECTS = [
   {
     label: "main project dg",
     explain: "EXPLAIN",
-    detail:
-      "DETAIL — 프로젝트 상세 설명이 들어갈 자리입니다. 무엇을 만들었고, 어떤 문제를 풀었는지.",
   },
   {
     label: "sub project hg",
     explain: "EXPLAIN",
-    detail: "DETAIL — 상세 설명이 들어갈 자리입니다.",
     banner: hgBanner,
   },
   {
     label: "sub project rg",
     explain: "EXPLAIN",
-    detail: "DETAIL — 상세 설명이 들어갈 자리입니다.",
     banner: rgBanner,
   },
   {
     label: "sub project eg",
     explain: "EXPLAIN",
-    detail: "DETAIL — 상세 설명이 들어갈 자리입니다.",
     banner: egBanner,
   },
 ];
 
-/* The banners are 2300x1000 — 3312x1440 reduced to the ratio it keeps, so an
-   open card is that ratio exactly and the artwork lands uncropped.
+/* The banners are 3312x1440, so an open card is that ratio exactly and the
+   artwork lands uncropped.
 
-   They arrived as SVG, but only as wrappers: six or seven PNG and JPEG
-   payloads embedded per file, 32.1MB across the three. Nothing in them was
-   vector, so every frame was paying to re-rasterise artwork that was already
-   raster. Baked to WebP at the size they are actually shown, the same three
-   are 216KB. Height comes from container query units rather
-   than from the viewport: the card is inset by the section gutters and the
+   They first arrived as SVG, but only as wrappers: six or seven PNG and
+   JPEG payloads embedded per file, 32.1MB across the three, nothing in them
+   vector. They are WebP now, resampled from 9936x4320 masters, and the same
+   three come to 569KB.
+
+   Height comes from container query units rather than from the viewport: the card is inset by the section gutters and the
    page may or may not have a scrollbar, so 100vw would be wrong by whatever
    those add up to, while 100cqw is the card's own width. Shut stays a fixed
    height, which is what lets the two interpolate.
@@ -94,21 +89,30 @@ export default function Projects() {
                 >
                   {p.banner ? (
                     <>
+                      {/* Two copies of the same file, so nothing ever
+                          changes size. The sharp one sits at the card's own
+                          bounds and is never transformed; the blurred one
+                          lies over it and fades away.
+
+                          A single layer cannot do both jobs. A blur samples
+                          past the element's edge, and with nothing out there
+                          the border fades out rather than blurring, so the
+                          blurred copy has to be oversized — and animating
+                          that oversize back to nothing on open is exactly
+                          the shrink you can see. Fading a layer that is
+                          always 106% leaves the geometry still. */}
                       <img
                         src={p.banner}
                         alt=""
                         aria-hidden
-                        /* object-top, so a shut card shows the head of the
-                           banner rather than a band from its middle. Open,
-                           the card carries the banner's own ratio and there
-                           is nothing to position.
-
-                           The scale is what keeps the blur honest: a blur
-                           samples past the element's edge, and with nothing
-                           there the border fades out. Oversizing by a few
-                           percent puts image under the sampled area. */
-                        className={`absolute inset-0 w-full h-full object-cover object-top select-none pointer-events-none transition-[filter,transform] duration-700 ease-out ${
-                          isOpen ? "" : "blur-[7px] scale-[1.06]"
+                        className="absolute inset-0 w-full h-full object-cover object-top select-none pointer-events-none"
+                      />
+                      <img
+                        src={p.banner}
+                        alt=""
+                        aria-hidden
+                        className={`absolute inset-0 w-full h-full object-cover object-top select-none pointer-events-none blur-[7px] scale-[1.06] transition-opacity duration-700 ease-out ${
+                          isOpen ? "opacity-0" : "opacity-100"
                         }`}
                       />
                       <div
@@ -123,10 +127,9 @@ export default function Projects() {
                   {/* Shut, the card is a label over a muted banner; open, it
                       is the banner. So the text leaves as the card opens —
                       but only where there is artwork to give way to, or a
-                      card without one would open onto nothing.
-
-                      It stays in the accessibility tree either way, so the
-                      detail is never something only a mouse can reach. */}
+                      card without one would open onto nothing. It is faded
+                      rather than removed, so it stays readable to a screen
+                      reader in either state. */}
                   <div
                     className={`relative flex flex-col items-start gap-3 transition-opacity duration-500 ease-out ${
                       p.banner && isOpen ? "opacity-0" : "opacity-100"
@@ -155,9 +158,6 @@ export default function Projects() {
                     >
                       {p.explain}
                     </Faceted>
-                    <p className="font-normal text-[#555962] text-body max-w-[720px]">
-                      {p.detail}
-                    </p>
                   </div>
                 </div>
               </Reveal>
