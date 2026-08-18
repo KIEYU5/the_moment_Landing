@@ -1,7 +1,7 @@
 import { useState } from "react";
-import egBanner from "../assets/EG_Banner.svg";
-import hgBanner from "../assets/HG_Banner.svg";
-import rgBanner from "../assets/RG_Banner.svg";
+import egBanner from "../assets/EG_Banner.webp";
+import hgBanner from "../assets/HG_Banner.webp";
+import rgBanner from "../assets/RG_Banner.webp";
 import DotField from "./DotField";
 import Faceted from "./Faceted";
 import Reveal from "./Reveal";
@@ -37,8 +37,14 @@ const PROJECTS = [
   },
 ];
 
-/* The banners are 3312x1440, so an open card is that ratio exactly and the
-   artwork lands uncropped. Height comes from container query units rather
+/* The banners are 2300x1000 — 3312x1440 reduced to the ratio it keeps, so an
+   open card is that ratio exactly and the artwork lands uncropped.
+
+   They arrived as SVG, but only as wrappers: six or seven PNG and JPEG
+   payloads embedded per file, 32.1MB across the three. Nothing in them was
+   vector, so every frame was paying to re-rasterise artwork that was already
+   raster. Baked to WebP at the size they are actually shown, the same three
+   are 216KB. Height comes from container query units rather
    than from the viewport: the card is inset by the section gutters and the
    page may or may not have a scrollbar, so 100vw would be wrong by whatever
    those add up to, while 100cqw is the card's own width. Shut stays a fixed
