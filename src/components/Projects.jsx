@@ -93,50 +93,72 @@ export default function Projects() {
                   className={`${cardClass} ${isOpen ? OPEN_HEIGHT : SHUT_HEIGHT}`}
                 >
                   {p.banner ? (
-                    <img
-                      src={p.banner}
-                      alt=""
-                      aria-hidden
-                      /* object-cover is belt and braces: the card already
-                         carries the banner's own ratio, so there is nothing
-                         to crop unless a rounding error asks for it. */
-                      className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
-                    />
+                    <>
+                      <img
+                        src={p.banner}
+                        alt=""
+                        aria-hidden
+                        /* object-top, so a shut card shows the head of the
+                           banner rather than a band from its middle. Open,
+                           the card carries the banner's own ratio and there
+                           is nothing to position.
+
+                           The scale is what keeps the blur honest: a blur
+                           samples past the element's edge, and with nothing
+                           there the border fades out. Oversizing by a few
+                           percent puts image under the sampled area. */
+                        className={`absolute inset-0 w-full h-full object-cover object-top select-none pointer-events-none transition-[filter,transform] duration-700 ease-out ${
+                          isOpen ? "" : "blur-[7px] scale-[1.06]"
+                        }`}
+                      />
+                      <div
+                        aria-hidden
+                        className={`absolute inset-0 bg-white pointer-events-none transition-opacity duration-700 ease-out ${
+                          isOpen ? "opacity-0" : "opacity-40"
+                        }`}
+                      />
+                    </>
                   ) : null}
 
-                  <Faceted
-                    as="p"
-                    delay={beat(i, GROUP)}
-                    className="font-bold text-black text-title"
-                  >
-                    TITLE
-                  </Faceted>
-                  <Faceted
-                    as="p"
-                    density="wide"
-                    delay={beat(i, GROUP) + BEAT}
-                    className="font-bold text-black text-label"
-                  >
-                    {p.label}
-                  </Faceted>
-                  <Faceted
-                    as="p"
-                    density="coarse"
-                    delay={beat(i, GROUP) + 2 * BEAT}
-                    className="font-semibold text-[#555962] text-body"
-                  >
-                    {p.explain}
-                  </Faceted>
+                  {/* Shut, the card is a label over a muted banner; open, it
+                      is the banner. So the text leaves as the card opens —
+                      but only where there is artwork to give way to, or a
+                      card without one would open onto nothing.
 
-                  {/* Left in the accessibility tree whether open or not, so
-                      the detail is never something only a mouse can reach. */}
-                  <p
-                    className={`relative font-normal text-[#555962] text-body max-w-[720px] transition-opacity duration-500 ease-out ${
-                      isOpen ? "opacity-100" : "opacity-0"
+                      It stays in the accessibility tree either way, so the
+                      detail is never something only a mouse can reach. */}
+                  <div
+                    className={`relative flex flex-col items-start gap-3 transition-opacity duration-500 ease-out ${
+                      p.banner && isOpen ? "opacity-0" : "opacity-100"
                     }`}
                   >
-                    {p.detail}
-                  </p>
+                    <Faceted
+                      as="p"
+                      delay={beat(i, GROUP)}
+                      className="font-bold text-black text-title"
+                    >
+                      TITLE
+                    </Faceted>
+                    <Faceted
+                      as="p"
+                      density="wide"
+                      delay={beat(i, GROUP) + BEAT}
+                      className="font-bold text-black text-label"
+                    >
+                      {p.label}
+                    </Faceted>
+                    <Faceted
+                      as="p"
+                      density="coarse"
+                      delay={beat(i, GROUP) + 2 * BEAT}
+                      className="font-semibold text-[#555962] text-body"
+                    >
+                      {p.explain}
+                    </Faceted>
+                    <p className="font-normal text-[#555962] text-body max-w-[720px]">
+                      {p.detail}
+                    </p>
+                  </div>
                 </div>
               </Reveal>
             );
