@@ -36,14 +36,19 @@ export default function Contact() {
   return (
     <section id="contact" className="relative bg-white w-full overflow-hidden">
       <DotField bare on />
-      <RevealGroup className="relative px-gutter py-section grid grid-cols-1 lg:grid-cols-2 gap-block items-center">
+      {/* Stacked and left aligned, the way every other section reads. It was
+          two columns centred against each other, which put the short heading
+          in the middle of the tall form's height — so the section opened on
+          259px of nothing above the heading, and the join above it came out
+          at twice the page's other seams. */}
+      <RevealGroup className="relative px-gutter py-section flex flex-col items-start gap-block">
         <Faceted as="h2" className="font-bold text-[#292b2f] text-display">
           Contact <span className="text-[#4a80f8]">Us</span>
         </Faceted>
 
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-[660px] lg:ml-auto flex flex-col gap-stack"
+          className="w-full max-w-[660px] flex flex-col gap-stack"
         >
           {FIELDS.map((field, i) => {
             const id = `contact-${field.key}`;
