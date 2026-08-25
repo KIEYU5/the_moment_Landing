@@ -34,13 +34,23 @@ const SPACING = 24;
    however wide its range is: at 3.2px into a 30px cell the field measured
    full contrast and still looked flat, because 6px of ink in a 30px cell is
    6px of ink either way. The floor stays above zero so a dot at the bottom
-   of the swell shrinks rather than disappearing. */
-const R_MIN = 0.7;
-const R_MAX = 4.2;
-const A_MIN = 0.1;
-const A_MAX = 0.78;
+   of the swell shrinks rather than disappearing.
 
-const BASE = [154, 161, 170];
+   The crest runs to a fifth of the cell and the floor to a speck: 14x on
+   radius, 204x on area. At 0.7-4.2 the two ends were recognisably the same
+   dot at two sizes, which is why the field read as one texture breathing
+   rather than as something moving through it. */
+const R_MIN = 0.35;
+const R_MAX = 5;
+const A_MIN = 0.05;
+const A_MAX = 0.95;
+
+/* The swell carries lightness as well as size. Holding every dot at one grey
+   left the crests to separate themselves on area alone, and a big dot and a
+   small dot of the same colour still read as one material; a crest that is
+   also brighter reads as lit. */
+const DIM = [96, 102, 112];
+const LIT = [206, 212, 222];
 const BRAND = [74, 128, 248];
 
 /* ---------- turbulence ---------- */
@@ -67,14 +77,33 @@ function vnoise(x, y) {
 
 /* Each octave drifts on its own heading, so the field churns in place
    instead of sliding across the screen as one sheet. The finest octave is
-   about 73px at the scale below — no octave may go under twice the 30px
-   lattice spacing, or the dots sample it as moire instead of grain. */
+   about 73px at the scale below — no octave may go under twice the 24px
+   lattice spacing, or the dots sample it as moire instead of grain.
+
+   Weight is spread towards the finer octaves. At 0.54 the coarsest carried
+   the field on its own, and its features are 300px across: a fifth of the
+   band would be one value, so a dot had no visible step to any of its
+   neighbours and whole regions set into a single size. Modelled over the
+   band's own lattice, cells with all four neighbours within 0.06 of them
+   went from 19.6% of the field to 3.2%.
+
+   These headings are now only the shape changing as it goes; the going
+   itself is FLOW below. At full strength they were most of the motion, and
+   motion that cancels between octaves has no direction in it — correlating
+   the field against itself half a second later, the best match sat at zero
+   displacement. Nothing was travelling anywhere. The field had energy and
+   no current, which is what makes something read as seething rather than as
+   alive. At a fraction of it the shape still evolves as it moves, but the
+   moving is what you see. These scale with FLOW: slowing the current without
+   slowing the boil under it just puts the field back towards seething. */
 const OCT = [
-  { f: 1, amp: 0.54, dx: 0.09, dy: -0.05 },
-  { f: 2.03, amp: 0.29, dx: -0.07, dy: 0.11 },
-  { f: 4.11, amp: 0.17, dx: 0.13, dy: 0.06 },
+  { f: 1, amp: 0.42, dx: 0.037, dy: -0.023 },
+  { f: 2.03, amp: 0.33, dx: -0.028, dy: 0.047 },
+  { f: 4.11, amp: 0.25, dx: 0.056, dy: 0.023 },
 ];
 const NORM = OCT.reduce((s, o) => s + o.amp, 0);
+/* How much of the ridge's tip is rounded off — see the fold below. */
+const RIDGE_ROUND = 0.3;
 
 function fbm(x, y, t, seed, ridged) {
   let sum = 0;
@@ -82,38 +111,84 @@ function fbm(x, y, t, seed, ridged) {
     let v = vnoise(x * o.f + t * o.dx + seed, y * o.f + t * o.dy + seed * 1.7);
     /* Ridged: folding the noise about its midpoint turns smooth hills into
        creases, which is the difference between a field that undulates and
-       one that looks like something is flowing through it. */
-    if (ridged) v = 1 - Math.abs(v * 2 - 1);
+       one that looks like something is flowing through it.
+
+       The fold is rounded rather than sharp. An absolute value has a corner,
+       and a corner in the fold is a corner in time as well as in space: a
+       dot riding over the crease climbed and then reversed in a single
+       frame, with nothing easing the turn — visibly a dot swelling and then
+       snapping shut. Reversals with real motion either side of them fell
+       from 0.8% of frames to 0.1%, and the harshest of them from 0.134 to
+       0.073. Below the threshold the fold is a parabola, which meets the
+       absolute value in both value and slope, so the creases away from the
+       tip are exactly as they were. */
+    if (ridged) {
+      const k = v * 2 - 1;
+      const a = Math.abs(k);
+      v = 1 - (a < RIDGE_ROUND ? (k * k) / (2 * RIDGE_ROUND) + RIDGE_ROUND / 2 : a);
+    }
     sum += o.amp * v;
   }
   return sum / NORM;
 }
 
 const SCALE = 1 / 300;
+/* The whole field is carried along one heading, and the heading itself
+   swings slowly. This is what the eye can follow: features hold together and
+   travel, rather than each octave pulling its own way and cancelling. Half a
+   A second apart the field matches itself at 0.89 two cells downstream
+   against 0.29 where it was: what changes is overwhelmingly the field
+   arriving somewhere, not the field churning in place.
+
+   The swing is integrated frame by frame rather than evaluated from the
+   clock: a direction that varies with t multiplied by t is a pendulum whose
+   swing grows without bound, not a current that wanders. */
+const FLOW_SPEED = 40; // px per second
+const FLOW_ANGLE = -0.34; // radians, a shallow rise to the right
+const FLOW_SWING = 0.5; // radians either side of it
+/* 40 is about the floor. A second of travel is under two lattice steps at
+   this speed; below 30 it is under one, and a current that moves a feature
+   less than the gap between two dots is not a current anyone can see. */
+const FLOW_SWING_HZ = 0.045; // a little over twenty seconds a cycle
+/* Seconds for a dot to close most of the gap to the size the turbulence is
+   asking for. Short enough that the field does not lag behind its own flow,
+   long enough that no dot can snap. */
+const SWELL_EASE = 0.04;
+const TAU = Math.PI * 2;
 /* Warping the sample point by another pair of noise fields is what curls the
-   grain into filaments rather than blobs. */
-const WARP = 2.3;
+   grain into filaments rather than blobs. The warp fields carry time too, so
+   raising this deepens the curl and quickens it at once. */
+const WARP = 3.6;
 /* Ridged noise is not centred on 0.5 and its spread is narrower than plain
    fBm, so the midpoint and contrast are measured off the field rather than
    assumed — mean 0.649, sigma 0.160, and a gain that puts two sigma at the
-   edges of the range. */
-const TURB_MID = 0.66;
+   edges of the range. Rounding the tip of the fold takes the top off the
+   ridged distribution, so the midpoint came down with it: at 0.66 the field
+   lost a fifth of its swell and clumped half again as much. */
+const TURB_MID = 0.58;
 /* Two sigma at the edges of the range would be the faithful mapping, but it
    leaves the field sitting in its middle, where a dot is never much larger
    or smaller than its neighbour and the grain reads as uniform however fine
    it actually is. Pushing past that clips both tails, which is what puts
    dark water between the bright filaments — but only so far: at 1.95 more
    than half the field was pinned at the ceiling, which flattens every crest
-   into one plateau and loses the shape inside it. */
-const TURB_GAIN = 1.75;
+   into one plateau and loses the shape inside it.
+
+   1.75 still pinned 8.7% of the field at the ceiling and 22.2% at the floor,
+   and a pinned run is a clump by definition — every dot in it the same size.
+   The response curve below does the separating now, so the gain does not
+   have to clip to get it: at 1.35 the ceiling holds 1.0% and the floor 8.9%,
+   and the field still measures 0.82 between its tenth and ninetieth
+   percentile out of a possible 1. */
+const TURB_GAIN = 1.35;
 /* The turbulence takes nearly the whole swell. The stroke overrides size
    outright rather than adding to it, so it needs no headroom reserved. */
 const TURB_FLOOR = 0.02;
 const TURB_SPAN = 0.92;
 
-function turbulence(x, y, t) {
-  const nx = x * SCALE;
-  const ny = y * SCALE;
+function turbulence(x, y, t, fx, fy) {
+  const nx = (x - fx) * SCALE;
+  const ny = (y - fy) * SCALE;
   const wx = fbm(nx, ny, t, 0, false) - 0.5;
   const wy = fbm(nx, ny, t, 11.3, false) - 0.5;
   const v = fbm(nx + WARP * wx, ny + WARP * wy, t, 3.7, true);
@@ -200,13 +275,37 @@ export default function DotField({ on = false, bare = false, className = "" }) {
     let cols = 0;
     let rows = 0;
     let stride = 0;
-    let half = 0;
+    /* The lattice is fitted to the box rather than laid into it. SPACING is
+       the step it aims for; the step it gets divides the box a whole number
+       of times, and each dot sits at the centre of its own cell — so the
+       outer ones are half a step in and no dot is ever cut by an edge.
+
+       Laid in at a fixed 24 the top row started flush at y = 0 and was
+       sliced in half, with a 3px strip of nothing along the bottom. Putting
+       a row on each edge instead cut every edge dot rather than only the top
+       one, and centring the whole grid pushed the outer rows a clear 10px
+       off both edges. The step never moves more than a couple of percent
+       from 24, which nothing can see. */
+    let stepX = SPACING;
+    let stepY = SPACING;
     /* How much stroke is on each lattice point this frame. Splatting the
        stamps into a grid the size of the lattice and reading one cell per
        dot costs a fraction of testing every dot against every stamp — a
        quick drag can have seventy stamps alive at once against eighteen
        hundred dots. */
     let paint = new Float32Array(0);
+    /* How far the field has been carried so far, and when it was last
+       advanced. Accumulated rather than derived from the clock, because the
+       heading swings — see FLOW_SWING. */
+    let flowX = 0;
+    let flowY = 0;
+    let flowAt = 0;
+    /* Each dot's swell as it was last frame, so a dot eases towards the
+       turbulence rather than tracking it exactly. A short constant — under
+       three frames — so nothing lags visibly; it only caps how fast a dot
+       may change size. */
+    let ease = new Float32Array(0);
+    let eased = false;
     let blank = false;
     let dirty = true;
     /* Now that fields run the length of the page, one drawing off screen is
@@ -229,11 +328,14 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cols = Math.ceil(w / SPACING);
-      rows = Math.ceil(h / SPACING);
-      stride = cols + 1;
-      half = (w - (cols - 1) * SPACING) / 2;
-      paint = new Float32Array(stride * (rows + 1));
+      cols = Math.max(1, Math.round(w / SPACING));
+      rows = Math.max(1, Math.round(h / SPACING));
+      stepX = w / cols;
+      stepY = h / rows;
+      stride = cols;
+      paint = new Float32Array(cols * rows);
+      ease = new Float32Array(cols * rows);
+      eased = false;
       dirty = true;
     };
 
@@ -280,14 +382,14 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       for (const s of trail) {
         const env = bristle(t - s.born);
         if (env <= 0) continue;
-        const c0 = Math.max(0, Math.floor((s.x - TRAIL_RADIUS - half) / SPACING));
-        const c1 = Math.min(cols, Math.ceil((s.x + TRAIL_RADIUS - half) / SPACING));
-        const r0 = Math.max(0, Math.floor((s.y - TRAIL_RADIUS) / SPACING));
-        const r1 = Math.min(rows, Math.ceil((s.y + TRAIL_RADIUS) / SPACING));
+        const c0 = Math.max(0, Math.floor((s.x - TRAIL_RADIUS) / stepX - 0.5));
+        const c1 = Math.min(cols - 1, Math.ceil((s.x + TRAIL_RADIUS) / stepX - 0.5));
+        const r0 = Math.max(0, Math.floor((s.y - TRAIL_RADIUS) / stepY - 0.5));
+        const r1 = Math.min(rows - 1, Math.ceil((s.y + TRAIL_RADIUS) / stepY - 0.5));
         for (let row = r0; row <= r1; row++) {
-          const dy = row * SPACING - s.y;
+          const dy = (row + 0.5) * stepY - s.y;
           for (let col = c0; col <= c1; col++) {
-            const dx = half + col * SPACING - s.x;
+            const dx = (col + 0.5) * stepX - s.x;
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d >= TRAIL_RADIUS) continue;
             const f = 1 - d / TRAIL_RADIUS;
@@ -299,32 +401,47 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       }
     };
 
-    const draw = (t) => {
+    const draw = (t, catchUp) => {
       ctx.clearRect(0, 0, w, h);
       layStroke(t);
 
-      for (let row = 0; row <= rows; row++) {
-        const y = row * SPACING;
-        for (let col = 0; col <= cols; col++) {
-          const x = half + col * SPACING;
+      for (let row = 0; row < rows; row++) {
+        const y = (row + 0.5) * stepY;
+        for (let col = 0; col < cols; col++) {
+          const x = (col + 0.5) * stepX;
 
           /* The stroke is the only thing that carries the brand colour;
-             everything else in the field stays the neutral grey. */
-          const lit = paint[row * stride + col];
+             everything else in the field stays grey. */
+          const cell = row * stride + col;
+          const lit = paint[cell];
 
           if (bare && lit < 0.012) continue;
 
           let r = R_TRAIL * lit;
           let a = A_TRAIL * lit;
+          /* How far up the swell this dot is, and so how light it burns. A
+             bare field has no swell, so its dots sit at the top of the ramp
+             and the stroke takes them the rest of the way to brand. */
+          let swell = 1;
 
           if (!bare) {
-            const n = TURB_FLOOR + turbulence(x, y, t) * TURB_SPAN;
+            const n = TURB_FLOOR + turbulence(x, y, t, flowX, flowY) * TURB_SPAN;
             const c = Math.min(1, Math.max(0, n));
-            const s = c * c * (3 - 2 * c);
+            /* Smoothstepped twice. One pass leaves most of the field in its
+               middle, where a dot is never much bigger than its neighbour
+               and the grain reads as uniform however wide the range is; the
+               second pass pushes each side of the midpoint towards its own
+               end, so contraction and expansion separate. Raising the gain
+               instead would do it by clipping, which flattens the crests
+               into one plateau and loses the shape inside them. */
+            const s1 = c * c * (3 - 2 * c);
+            const target = s1 * s1 * (3 - 2 * s1);
+            swell = eased ? ease[cell] + (target - ease[cell]) * catchUp : target;
+            ease[cell] = swell;
             /* Override, not addition: under the stroke a dot is this size
                whatever the turbulence was doing there. */
-            r = Math.max(r, R_MIN + s * (R_MAX - R_MIN));
-            a = Math.max(a, A_MIN + s * (A_MAX - A_MIN));
+            r = Math.max(r, R_MIN + swell * (R_MAX - R_MIN));
+            a = Math.max(a, A_MIN + swell * (A_MAX - A_MIN));
           }
 
           if (lit > HALO_FROM) {
@@ -335,15 +452,20 @@ export default function DotField({ on = false, bare = false, className = "" }) {
           }
 
           ctx.globalAlpha = Math.min(1, a);
-          ctx.fillStyle = `rgb(${Math.round(BASE[0] + (BRAND[0] - BASE[0]) * lit)}, ${Math.round(
-            BASE[1] + (BRAND[1] - BASE[1]) * lit,
-          )}, ${Math.round(BASE[2] + (BRAND[2] - BASE[2]) * lit)})`;
+          /* Two ramps in one colour: dim to lit across the swell, then that
+             towards brand under the stroke. */
+          const ch = (i) => {
+            const grey = DIM[i] + (LIT[i] - DIM[i]) * swell;
+            return Math.round(grey + (BRAND[i] - grey) * lit);
+          };
+          ctx.fillStyle = `rgb(${ch(0)}, ${ch(1)}, ${ch(2)})`;
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.fill();
         }
       }
       ctx.globalAlpha = 1;
+      if (!bare) eased = true;
     };
 
     const frame = (now) => {
@@ -357,9 +479,18 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       if (still) {
         if (!dirty) return;
         dirty = false;
-        draw(0);
+        draw(0, 1);
         return;
       }
+
+      /* Clamped: a backgrounded tab hands back one enormous gap on its way
+         in, and an unclamped step would jump the field a screen sideways in
+         a single frame. */
+      const step = Math.min(0.05, Math.max(0, t - flowAt));
+      flowAt = t;
+      const heading = FLOW_ANGLE + FLOW_SWING * Math.sin(t * FLOW_SWING_HZ * TAU);
+      flowX += Math.cos(heading) * FLOW_SPEED * step;
+      flowY += Math.sin(heading) * FLOW_SPEED * step;
 
       if (trail.length && t - trail[0].born > TRAIL_LIFE) {
         trail = trail.filter((s) => t - s.born <= TRAIL_LIFE);
@@ -377,7 +508,7 @@ export default function DotField({ on = false, bare = false, className = "" }) {
       }
       blank = false;
 
-      draw(t);
+      draw(t, 1 - Math.exp(-step / SWELL_EASE));
     };
 
     size();

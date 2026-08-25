@@ -25,7 +25,7 @@ export default function Wordmark({ delay = 0, className = "" }) {
             key={i}
             id={`${glyphsId}-g${i}`}
             d={d}
-            fill={i === BRAND_LETTER ? "#4a80f8" : "var(--hero-ink)"}
+            fill={i === BRAND_LETTER ? "#4a80f8" : "#292b2f"}
           />
         ))}
 

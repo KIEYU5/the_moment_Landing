@@ -3,8 +3,7 @@ import { useEffect, useRef, useState } from "react";
 /* Fires once, the first time the element crosses the trigger line, and then
    stops observing. Everything on the page is an opening rather than an
    entrance: replaying a section on the way back up reads as the site
-   restarting, and for the hero the inversion would have to un-invert to do
-   it.
+   restarting.
 
    threshold stays at 0 on purpose: an element taller than the viewport can
    never reach a fractional threshold, so the reveal would never fire. The

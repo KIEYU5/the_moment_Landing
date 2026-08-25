@@ -12,32 +12,34 @@ export const GROUP = 200;
 /* i-th item of a run, optionally starting a group in. */
 export const beat = (i, from = 0) => from + i * BEAT;
 
-/* These three have to match index.css: the reveal transition, the colour
-   swap, and the dots fading up. Nothing reads a stylesheet at runtime, so
-   they are written down in both places. */
+/* These three have to match index.css: the reveal transition, the band
+   inverting, and the dots fading up on it. Nothing reads a stylesheet at
+   runtime, so they are written down in both places. */
 export const REVEAL_RUNS = 950;
 export const INVERT_RUNS = 520;
 export const DOTS_RUNS = 460;
 
-/* The hero is a chain, and every length in it is asked of whatever owns that
-   length rather than estimated.
+/* The hero opens on one cue. The wordmark gathers out of its facets, the
+   navigation arrives, and the band inverts — all from the same instant, so
+   the opening is over at whichever of them runs longest rather than at the
+   sum of them. It used to be a chain that only reached the band once the
+   mark had settled, which put the last of it nearly a second later.
 
-   The opening is one phase, not two: the wordmark gathers out of its facets
-   and the navigation arrives on the same cue. Holding the nav back until the
-   mark had settled was costing 1.2s before the colour swap could even begin.
+   The band is still two beats within itself: it inverts, and the dots come
+   up on the dark once it has. That order is the point — the field reads as
+   appearing on a background that turned, not as arriving with it.
 
-   The swap then waits on whichever of the two is still going. */
-const MARK_AT = 140;
-const NAV_AT = MARK_AT;
+   Every length here is asked of whatever owns that length rather than
+   estimated. */
+const OPEN_AT = 140;
 const MARK_RUNS = WORDMARK_RUNS;
 const NAV_RUNS = 3 * BEAT + REVEAL_RUNS; // last link's stagger plus its travel
-const INVERT_AT = Math.max(MARK_AT + MARK_RUNS, NAV_AT + NAV_RUNS);
-const DOTS_AT = INVERT_AT + INVERT_RUNS;
+const DOTS_AT = OPEN_AT + INVERT_RUNS;
 
 export const HERO = {
-  mark: MARK_AT,
-  nav: NAV_AT,
-  invert: INVERT_AT,
+  mark: OPEN_AT,
+  nav: OPEN_AT,
+  invert: OPEN_AT,
   dots: DOTS_AT,
-  ends: DOTS_AT + DOTS_RUNS,
+  ends: Math.max(OPEN_AT + MARK_RUNS, OPEN_AT + NAV_RUNS, DOTS_AT + DOTS_RUNS),
 };
